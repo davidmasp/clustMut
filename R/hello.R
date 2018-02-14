@@ -40,3 +40,17 @@ parse_randommut_out <- function(dat){
 
   return(res)
 }
+
+
+
+binom_test <- function(x,n,p,...){
+  if (!all(c(requireNamespace("broom", quietly = TRUE),
+             requireNamespace("purrr", quietly = TRUE)))){
+    print("Dependencies failed.")
+  }
+  res = purrr::map_df(1:length(x),function(i){
+    broom::tidy(binom.test(x = x[i],n = n[i],p = p[i],...))
+  })
+
+  return(res)
+}

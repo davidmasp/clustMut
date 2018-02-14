@@ -14,12 +14,14 @@ Suggests:
     dplyr,
     tidyselect,
     parallel,
-    purrr
+    purrr,
+    broom
 Imports: 
     GenomicRanges,
     localFDR,
     dplyr,
     tidyselect,
     magrittr,
-    purrr
+    purrr,
+    broom
 RoxygenNote: 6.0.1
