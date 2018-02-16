@@ -96,14 +96,24 @@ compute_distances_splited <- function(gr,
   gr_per_chr =  GenomicRanges::split(gr,f)
 
   if (!is.null(no_cores)){
-    mdist = end(gr_per_chr) %>%
-      parallel::parLapply(cl = cl,X = .,fun = compute_m_distance) %>% unlist()
-    gr$mdist = mdist
+    mdist_per_chr = parallel::parLapply(cl = cl,X = gr_per_chr,fun = function(x){
+        mdist = compute_m_distance(end(x))
+        return(mdist)
+        })
   } else {
     #browser()
-    mdist =  unlist(lapply(X = end(gr_per_chr),FUN = compute_m_distance))
-    gr$mdist = mdist
+    mdist_per_chr = base::lapply(gr_per_chr,function(x){
+      mdist = compute_m_distance(end(x))
+      return(mdist)
+    })
   }
+  browser()
+  # this way I mantain the geno,mic Ranges structure but use the purrr functions
+  purrr::walk(names(mdist_per_chr),function(i){
+    gr_per_chr[[i]]$mdist = mdist_per_chr[[i]]
+  })
+
+  gr = unlist(gr_per_chr)
 
   if (!is.null(no_cores)){
     parallel::stopCluster(cl)
