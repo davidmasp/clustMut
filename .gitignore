@@ -4,4 +4,10 @@
 .Ruserdata
 .Renviron
 .Rhistory
-sandbox.R
+
+# sandbox scripts
+sandbox.*
+sandbox_vaf.*
+
+# plots
+*.png
