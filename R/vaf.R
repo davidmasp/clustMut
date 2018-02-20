@@ -53,79 +53,19 @@ compute_shared_reads <- function(mdist,rl=50){
   return(same_read)
 }
 
+vaf_generation_binomial  <- function(ar, rr, mdist) {
+  tr = ar + rr
+  vaf = ar/tr
 
-vaf_generation_beta <- function(ar,rr,same_read=0){
-  if (any(same_read > 1)){
-    stop("Same read proportion should be [0,1]")
-  }
-  #browser()
-  total = ar + rr
-  ar_shared = round(ar * (same_read))
-  rr_shared = round(rr * (same_read))
+  ar_prime = rbinom(n = length(ar),size = tr,prob = vaf)
 
-  ar_ind = ar-ar_shared
-  rr_ind = rr-rr_shared
+  p_shared = compute_shared_reads(mdist)
 
-  shared = ar_shared+rr_shared
-
-  coverage = ar_ind + rr_ind
-  alt_reads_1= round(rbeta(length(ar),ar,rr) * coverage)
-  alt_reads_2 =round(rbeta(length(ar),ar,rr) * coverage)
-  alt_reads_shared = round(rbeta(length(ar),ar_shared,rr_shared) * shared)
-
-  vaf1 = (alt_reads_1 + alt_reads_shared) / total
-  vaf2 = (alt_reads_2 + alt_reads_shared) / total
-
-  return(list(vaf1, vaf2))
-
+  vaf_prime = ((p_shared * ar)/ tr) + (((1 - p_shared)*ar_prime)/ tr)
 }
-
-
-vaf_generation_binomial <- function(vaf,coverage,same_read=0){
-  #browser()
-  # note that this is just 1 iteration
-  # same read proportion must be beteen 0 and 1!
-  if (any(same_read > 1)){
-    stop("Same read proportion should be [0,1]")
-  }
-
-  # this is structured in 3 experiments, one for the independent reads
-  # of mutation 1, one for the independent reads of mutation 2, and the other
-  # for the shared reads. Note that mutation 1 and 2 are not real but simulated
-  # and in this case have the same vaf. The shared reads should be computed
-  # externally using the formula Fr = (rl - x)/(x + rl) being the rl the read
-  # length and x the distance between the 2 real mutations.
-
-  corrected_cov = round(coverage - same_read * coverage)
-
-  reads_mutated_1 = rbinom(n = length(coverage),
-                           size = corrected_cov,
-                           prob = vaf)
-
-  reads_mutated_2 = rbinom(n = length(coverage),
-                           size = corrected_cov,
-                           prob = vaf)
-
-  reads_mutated_3 = rbinom(
-    n = length(coverage),
-    size = round(same_read * coverage),
-    prob = vaf
-  )
-
-  vaf1 = (reads_mutated_1 + reads_mutated_3) / coverage
-
-  vaf2 = (reads_mutated_2 + reads_mutated_3) / coverage
-
-  return(list(vaf1, vaf2))
-}
-
-
-
 
 ## VAFlr random distribution  =============
 # CAREFUL SAMPLES NOT CON SIDERED!!!!
-
-
 
 vaflr_random <- function(vaf_vector){
   vaf1 = vaf_vector
@@ -142,11 +82,13 @@ vaflr_random <- function(vaf_vector){
 ## VAFlr pipes  =============
 
 vaflr_positive <- function(dat_gr_dist,clust_mask) {
+  #browser()
   dat_gr_cl = dat_gr_dist[clust_mask]
-  a = vaf_generation_binomial(vaf = dat_gr_cl$VAF,
-                              coverage = (dat_gr_cl$RR + dat_gr_cl$AR),
-                              same_read = compute_shared_reads(dat_gr_cl$mdist))
-  vaflr = compute_vafLR(vaf1 = a[[1]],vaf2 = a[[2]])
+  vaf_prime = vaf_generation_binomial(ar = dat_gr_cl$AR,
+                              rr = dat_gr_cl$RR,
+                              mdist = dat_gr_cl$distance)
+  vaflr = compute_vafLR(vaf1 = dat_gr_cl$VAF,vaf2 =vaf_prime)
+  return(vaflr)
 }
 
 vaflr_negative <- function(clust_mask,
@@ -175,18 +117,24 @@ vaflr_negative <- function(clust_mask,
     if(any(k!=c(q,g))) stop("kjdkfjs")
     if (!any(x)){
       return(NULL) # no clusters found
+    } else if (length(x) == sum(x)){
+      warning(glue::glue("not cls muts found in {q}"))
+      return(NULL)
     } else {
-
       idx = which(x)
       vaf_cluster = z[idx]
 
       vaf_unclust = double(length = length(idx))
+
       for (idx_out in seq_along(idx)){
         #browser()
         i = idx[idx_out]
         diff = abs(y - y[i])
         diff[diff < unclust_distance] = NA
+
         j = which.min(diff)
+
+        #browser()
         #print(j)
         vaf_unclust[idx_out] = z[j]
       }
@@ -212,7 +160,7 @@ vaflr_observed <- function(clust_mask,
                            gr) {
   cluster_split = base::split(clust_mask,f)
   pos_split = base::split(end(gr),f)
-  mdist_split = base::split(gr$mdist,f)
+  mdist_split = base::split(gr$distance,f)
   vaf_split = base::split(gr$VAF,f)
 
   lol = list(cluster_split,
@@ -241,6 +189,7 @@ vaflr_observed <- function(clust_mask,
         pair_idx = sample(x = pair_idx,size = 1)
       }
       if (length(vaf) < pair_idx){
+        browser()
         stop("jhdfksfu")
         }
       return( vaf[pair_idx] )
