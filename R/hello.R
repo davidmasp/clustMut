@@ -1,12 +1,12 @@
 ###############################################################################
-#                 _          _                     
-#                | |        | |                    
-#                | |__   ___| |_ __   ___ _ __ ___ 
+#                 _          _
+#                | |        | |
+#                | |__   ___| |_ __   ___ _ __ ___
 #                | '_ \ / _ \ | '_ \ / _ \ '__/ __|
 #                | | | |  __/ | |_) |  __/ |  \__ \
 #                |_| |_|\___|_| .__/ \___|_|  |___/
-#                              | |                  
-#                              |_|                  
+#                              | |
+#                              |_|
 #
 ###############################################################################
 
@@ -47,6 +47,14 @@ parse_randommut_out <- function(dat){
 }
 
 
+mask_complex_events <- function(gr){
+  #### unique sample assumtion
+  stopifnot(length(unique(gr$sample)) == 1 )
+
+  ce_mask = mcols(distanceToNearest(gr))$distance == 0
+  warning(glue::glue("{scales::percent(sum(ce_mask) / length(gr))} mutations removed as complex events."))
+  return(ce_mask)
+}
 
 binom_test <- function(x,n,p,...){
   if (!all(c(requireNamespace("broom", quietly = TRUE),
@@ -58,4 +66,15 @@ binom_test <- function(x,n,p,...){
   })
 
   return(res)
+}
+
+
+unlist_GR_base_list <- function(x){
+  #browser()
+  master_gr = x[[1]]
+  for (i in 2:length(x)){
+    master_gr = c(master_gr,x[[i]])
+  }
+
+  return(master_gr)
 }
