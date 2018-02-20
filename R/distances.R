@@ -10,7 +10,6 @@
 
 # ======= LOW LEVEL ======= #
 
-
 #' Get mutation distance
 #'
 #' Get the distance between a particular mutaion and the next or to the previous.
@@ -78,46 +77,41 @@ compute_m_distance <- function(x,k=1,use = min){
 #' @examples
 compute_distances_splited <- function(gr,
                                      f,
-                                     no_cores = NULL
-                                     ){
+                                     bcparams=NULL){
 
-  # prepare cluster
-  if (!is.null(no_cores)){
-    #browser()
-    requireNamespace("parallel", quietly = TRUE)
-    cl <- parallel::makeCluster(no_cores)
-    parallel::clusterEvalQ(cl, { library(clustMut)})
+  if (is.null(bcparams)){
+    bcparams = BiocParallel::SerialParam()
   }
 
   total_muts = length(gr)
 
+  gr$distance = -1
+  # see this caveat of spliting the GR https://support.bioconductor.org/p/42606/
+  # main thing is that GRlist is not a normal list.
+  # so we cannot assign new columns in a list-wise manner.
+  # To do a workaround, I create the column BEFORE spliting
+  # and then put a impossible number
+
   if (is.list(f)) f <- interaction(f, drop = TRUE)
 
-  gr_per_chr =  GenomicRanges::split(gr,f)
+  gr_per_chr =  base::split(gr,f)
 
-  if (!is.null(no_cores)){
-    mdist_per_chr = parallel::parLapply(cl = cl,X = gr_per_chr,fun = function(x){
-        mdist = compute_m_distance(end(x))
-        return(mdist)
-        })
-  } else {
+  mdist_per_chr = BiocParallel::bplapply(gr_per_chr,
+                           distanceToNearest,
+                           BPPARAM = bcparams)
+
+  #browser()
+  # this way I mantain the genomic ranges structure. (but very slow...)
+  for (i in names(mdist_per_chr)){
     #browser()
-    mdist_per_chr = base::lapply(gr_per_chr,function(x){
-      mdist = compute_m_distance(end(x))
-      return(mdist)
-    })
+    tmp = gr_per_chr[[i]]
+    mdist = mdist_per_chr[[i]]
+    mcols(mdist)$distance =  as.integer(mcols(mdist)$distance + 1) # memory
+    tmp[queryHits(mdist)]$distance = mcols(mdist)$distance
+    gr_per_chr[[i]] = tmp
   }
-  browser()
-  # this way I mantain the geno,mic Ranges structure but use the purrr functions
-  purrr::walk(names(mdist_per_chr),function(i){
-    gr_per_chr[[i]]$mdist = mdist_per_chr[[i]]
-  })
 
-  gr = unlist(gr_per_chr)
-
-  if (!is.null(no_cores)){
-    parallel::stopCluster(cl)
-  }
+  gr = unlist_GR_base_list(gr_per_chr)
 
   return(gr)
 }
