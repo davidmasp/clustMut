@@ -184,3 +184,13 @@ compute_fdr <- function(dat_gr,rand_dist,f,no_cores=NULL){
   return(dat_fdr)
 
 }
+
+
+
+write_clust_muts <- function(dat_gr,clust_mask,filename){
+  gr = dat_gr[clust_mask]
+
+  mut_code = glue::glue("{seqnames(gr)}:{start(gr)}-{end(gr)}_{gr$REF}-{gr$ALT}_{gr$sample}")
+
+  readr::write_lines(mut_code,path = filename)
+}
