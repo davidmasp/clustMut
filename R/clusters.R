@@ -28,7 +28,7 @@ plot_eedistances <- function(mdist,rdist,fdr,sample) {
     labs(x = "-log10(Expected distance to nearest)",
          y = "-log10(Observed distance to nearest)",
          title = sample,
-         caption = glue::glue("{format(length(dat_gr)/2000,digits=2)} mutations / Mbp")) +
+         caption = glue::glue("{format(length(fdr)/2000,digits=2)} mutations / Mbp")) +
     scale_color_viridis_c(option = "A",end = .9)
 
 
@@ -38,6 +38,9 @@ plot_eedistances <- function(mdist,rdist,fdr,sample) {
 
 compute_fdr_basic <- function(pos_distance,random_matrix){
   # this is to avoid log(0) should be done internally I guess.
+  #browser()
+  stopifnot(nrow(random_matrix) == length(pos_distance))
+
   pos_distance = pos_distance + 1
   random_matrix = random_matrix + 1
 
@@ -56,7 +59,7 @@ sample_free_clusters <- function(dat_gr,rand_df,plot=FALSE) {
 
   stopifnot(length(unique(dat_gr$sample)) == 1 )
 
-
+  #browser()
   n_mask = grepl("N",dat_gr$ctx)
   print(glue::glue("{scales::percent(sum(n_mask)/length(dat_gr))} removed due to N mask"))
 
@@ -64,6 +67,7 @@ sample_free_clusters <- function(dat_gr,rand_df,plot=FALSE) {
   rand_df = rand_df[!n_mask,]
 
   # filter complex events
+
   ce_mask = mask_complex_events(dat_gr)
 
   dat_gr = dat_gr[!ce_mask]
@@ -73,6 +77,9 @@ sample_free_clusters <- function(dat_gr,rand_df,plot=FALSE) {
   rand_dist = compute_distances_splited_tbl(rand_df,f = split_factor,no_cores = 5)
 
   gr_dist = distanceToNearest(dat_gr)
+  # so when a chromosome only have one mutation
+  dat_gr = dat_gr[queryHits(gr_dist)]
+  rand_dist = rand_dist[queryHits(gr_dist),]
   mdist = mcols(gr_dist)$distance + 1
   random_matrix = as.matrix(rand_dist)
 
@@ -182,15 +189,17 @@ compute_fdr <- function(dat_gr,rand_dist,f,no_cores=NULL){
   }
 
   return(dat_fdr)
-
 }
 
+
+generate_mut_format <- function(gr){
+  mut_code = glue::glue("{seqnames(gr)}:{start(gr)}-{end(gr)}_{gr$REF}-{gr$ALT}_{gr$sample}")
+  return(mut_code)
+}
 
 
 write_clust_muts <- function(dat_gr,clust_mask,filename){
   gr = dat_gr[clust_mask]
-
-  mut_code = glue::glue("{seqnames(gr)}:{start(gr)}-{end(gr)}_{gr$REF}-{gr$ALT}_{gr$sample}")
-
+  mut_code = generate_mut_format(gr)
   readr::write_lines(mut_code,path = filename)
 }
