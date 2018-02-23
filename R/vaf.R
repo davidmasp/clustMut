@@ -94,7 +94,8 @@ vaflr_positive <- function(dat_gr_dist,clust_mask) {
 vaflr_negative <- function(clust_mask,
                            f,
                            gr,
-                           unclust_distance) {
+                           unclust_distance,
+                           max_distance=1000000) {
 
   #dat_gr_splited = split(gr,f)
   cmask_splited = base::split(clust_mask,f)
@@ -130,8 +131,7 @@ vaflr_negative <- function(clust_mask,
         #browser()
         i = idx[idx_out]
         diff = abs(y - y[i])
-        diff[diff < unclust_distance] = NA
-
+        diff[diff < unclust_distance | diff > max_distance] = NA
         j = which.min(diff)
 
         #browser()
@@ -202,6 +202,121 @@ vaflr_observed <- function(clust_mask,
 
   vaflr = compute_vafLR(vaf1 = vaf_obs$first,vaf2 = vaf_obs$last)
   return(vaflr)
+}
+
+
+load_vaf_fdr <- function(dat_gr,
+                         clust_mask,
+                         break_points) {
+  #browser()
+
+  vaflr = vaflr_positive(dat_gr_dist = dat_gr,clust_mask = clust_mask)
+  vaflr = vaflr[!is.na(vaflr)] # check where these come from
+  vaflr = vaflr[!is.infinite(vaflr)] # check where these come from
+  #' We can see an enrichment of the low vaflr section.
+  vaflr %>% density() %>% plot
+  vaflr %>% hist(breaks = 30)
+
+  #' We transform the values using the break_points previously defined
+  positive_df = data.frame(vaflr = vaflr,
+                           case = "positive")
+  positive_df$cutpoint = cut(positive_df$vaflr,breaks = break_points,include.lowest = T)
+
+
+
+
+  # negative ==========================================
+
+
+  #### ==== function starts here
+  ###  cluster mask
+  ###  position
+  ###  factor to split
+  ###  vaf
+
+
+  f = interaction(list(dat_gr$sample)) # here sample should also
+  vaflr = vaflr_negative(clust_mask =clust_mask,
+                         f = f,
+                         gr = dat_gr,
+                         unclust_distance = 10000 )
+  #' We can see an enrichment of the low vaflr section.
+  vaflr %>% abs() %>%  density() %>% plot
+  vaflr %>% hist(breaks = 30)
+
+
+  #' We transform the values using the break_points previously defined
+  negative_df = data.frame(vaflr = vaflr,
+                           case = "negative")
+  negative_df$cutpoint = cut(negative_df$vaflr,breaks = break_points,include.lowest = T)
+
+
+  # kernel estimator
+  max_lr = max(max(negative_df$vaflr,positive_df$vaflr))
+
+  pos_den = density(positive_df$vaflr,from=0,to=max_lr)
+  neg_den = density(negative_df$vaflr,from=0,to=max_lr)
+
+  fdr = neg_den$y /  (neg_den$y + pos_den$y)
+
+  fdr_df = data.frame(fdr = fdr,
+                      vaflr = neg_den$x)
+
+  p3 = ggplot(fdr_df,aes(x = vaflr,y = fdr)) + geom_line() +
+    geom_vline(xintercept = 0.5,linetype="dashed",color="gray") +
+    ylim(0,1)
+
+  # plots ==============
+
+  df = rbind(positive_df,negative_df)
+
+  p1 = df %>% ggplot(aes(x = vaflr,color = case)) + geom_density() +
+    theme(legend.position = "top") +
+    scale_color_brewer(palette = "Set1") +
+    geom_vline(xintercept = 0.5,linetype="dashed",color="gray")
+
+  library(cowplot)
+  library(dplyr)
+  vaf_df = df %>% group_by(case) %>% mutate(total = n()) %>%  ungroup() %>%
+    dplyr::group_by(cutpoint,case) %>%
+    dplyr::summarise(n = n(),
+                     per = n/unique(total)) %>% ungroup()
+  p0 = vaf_df %>% ggplot(aes(x = cutpoint,y = n, fill = case)) +
+    geom_bar(stat = "identity") +
+    theme(legend.position = "top") +
+    scale_fill_brewer(palette = "Set1")
+
+  vaf_fdr = vaf_df %>% select(case,n,cutpoint) %>% tidyr::spread(key = "case",value ="n")
+
+  vaf_fdr$Obs =  (vaf_fdr$positive + vaf_fdr$negative)
+  vaf_fdr$fdr = vaf_fdr$negative / vaf_fdr$Obs
+
+  binom_df = binom_test(x = vaf_fdr$negative,
+                        n = vaf_fdr$Obs,
+                        p = vaf_fdr$fdr)
+  vaf_fdr = cbind(binom_df,vaf_fdr)
+
+  cutpoints = vaf_fdr$cutpoint %>% stringr::str_split(",") %>%
+    purrr::map_df(function(x){
+      res = stringr::str_extract(string = x,pattern = "[:digit:][.]*[:digit:]*")
+      data.frame(matrix(as.numeric(res),ncol = 2),stringsAsFactors = F)
+    })
+
+  colnames(cutpoints) <- c("lower","upper")
+
+  vaf_fdr = cbind(cutpoints,vaf_fdr)
+
+  p2 = vaf_fdr %>% ggplot(aes(x = cutpoint,y = fdr)) +
+    geom_point() +
+    geom_errorbar(aes(ymin=conf.low,ymax=conf.high),width = 0.2) +
+    geom_path(group=1) +
+    ylim(0,1)
+
+  fp = plot_grid(p0,p1,p2,p3,ncol = 2,labels = "AUTO",align="v")
+
+  bin_fdr = vaf_fdr
+  den_fdr = fdr_df
+  return(list(bin_fdr = bin_fdr,den_fdr = den_fdr,plot = fp))
 }
 
 
