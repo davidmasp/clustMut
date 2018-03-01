@@ -13,6 +13,8 @@
 plot_eedistances <- function(mdist,rdist,fdr,sample) {
   #browser()
   library(cowplot)
+  library(viridis)
+  require(ggplot2)
 
   df = data.frame(
     fdr = fdr[order(mdist)],
@@ -29,7 +31,7 @@ plot_eedistances <- function(mdist,rdist,fdr,sample) {
          y = "-log10(Observed distance to nearest)",
          title = sample,
          caption = glue::glue("{format(length(fdr)/2000,digits=2)} mutations / Mbp")) +
-    scale_color_viridis_c(option = "A",end = .9)
+    scale_color_viridis(option = "A",end = .9)
 
 
   return(fp)
