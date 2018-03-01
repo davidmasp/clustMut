@@ -8,6 +8,37 @@
 #
 # ==================================================================+======== #
 
+
+
+distance_per_sample_VR <- function(VR) {
+  SN = sampleNames(VR)
+  lvls = levels(SN)
+  lvls_list = lvls %>% purrr::map(function(x) which(SN == x))
+  names(lvls_list) <- lvls
+
+  distance_df = lvls_list %>% purrr::map_df(function(x){
+    stopifnot(unique(sampleNames(VR[x])) != 1)
+    dobj = distanceToNearest(VR[x])
+    dist_df = data.frame(idx = x[queryHits(dobj)],
+                         distance = mcols(dobj)$distance)
+
+    return(dist_df)
+  })
+
+  if (length(VR) != nrow(distance_df)){
+    warning("Single chromosome mutation. Setting to -1.")
+  }
+
+  distance = integer(length(VR))
+  distance[distance_df$idx] = distance_df$distance
+  distance[-distance_df$idx] = -1
+  mcols(VR)$distance = distance
+
+  return(VR)
+}
+
+
+
 # ======= LOW LEVEL ======= #
 
 #' Get mutation distance
