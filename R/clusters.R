@@ -16,6 +16,12 @@ plot_eedistances <- function(mdist,rdist,fdr,sample) {
   library(viridis)
   require(ggplot2)
 
+  nclust = sum(fdr<0.2)
+  clust_per = scales::percent(nclust/length(fdr))
+
+  caption_text = glue::glue("Clust Muts = {nclust} ({clust_per})
+                             {format(length(fdr)/2000,digits=2)} mutations / Mbp")
+
   df = data.frame(
     fdr = fdr[order(mdist)],
     y = log10(mdist[order(mdist)]),
@@ -30,8 +36,9 @@ plot_eedistances <- function(mdist,rdist,fdr,sample) {
     labs(x = "-log10(Expected distance to nearest)",
          y = "-log10(Observed distance to nearest)",
          title = sample,
-         caption = glue::glue("{format(length(fdr)/2000,digits=2)} mutations / Mbp")) +
+         caption = caption_text)+
     scale_color_viridis(option = "A",end = .9)
+
 
 
   return(fp)
