@@ -10,6 +10,7 @@
 
 
 
+
 plot_eedistances <- function(mdist,rdist,fdr,sample) {
   #browser()
   library(cowplot)
@@ -54,12 +55,68 @@ compute_fdr_basic <- function(pos_distance,random_matrix){
   random_matrix = random_matrix + 1
 
   fdr_matrix = apply(random_matrix,2,function(y){
-    localFDR::compute_densityfdr(obs = log(pos_distance), null = log(y))
+    localFDR::compute_densityfdr(obs = log(pos_distance), null = log(y),alternative="left")
   })
 
   fdr_vec = apply(fdr_matrix,1,median)
   return(fdr_vec)
 }
+
+
+
+clust_dist_sample <- function(vr,rand_df){
+  #browser()
+  stopifnot(requireNamespace("VariantAnnotation",quietly = TRUE))
+
+  ######### ONE SAMPLE ASSUMPTION
+  stopifnot(length(unique(VariantAnnotation::sampleNames(vr))) == 1 )
+
+  #browser()
+
+  ## FILTERS
+  n_mask = grepl("N",vr$ctx)
+  warning(glue::glue("{scales::percent(sum(n_mask)/length(vr))} removed due to N mask"))
+
+  vr = vr[!n_mask]
+  rand_df = rand_df[!n_mask,]
+
+  # filter complex events
+
+  ce_mask = mask_complex_events(vr)
+
+  vr = vr[!ce_mask]
+  rand_df = rand_df[!ce_mask,]
+
+  # compute distances in the random data
+  split_factor = seqnames(vr)
+  rand_dist = compute_distances_splited_tbl(rand_df,
+                                            f = split_factor,
+                                            no_cores = NULL) # explore this
+
+  gr_dist = distanceToNearest(vr)
+  # so when a chromosome only have one mutation
+  vr = vr[queryHits(gr_dist)]
+  rand_dist = rand_dist[queryHits(gr_dist),]
+  mdist = mcols(gr_dist)$distance + 1
+  random_matrix = as.matrix(rand_dist)
+
+  fdr = compute_fdr_basic(pos_distance = mdist,
+                          random_matrix = random_matrix)
+
+  vr$fdr = fdr
+  vr$dist = mdist
+  vr$exp_dist = random_matrix[,sample(ncol(random_matrix),size = 1)]
+  vr$tp = sum(1- vr$fdr)
+
+  return(vr)
+}
+
+
+
+
+
+
+
 
 
 sample_free_clusters <- function(dat_gr,rand_df,plot=FALSE) {
