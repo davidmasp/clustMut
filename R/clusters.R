@@ -62,8 +62,6 @@ compute_fdr_basic <- function(pos_distance,random_matrix){
   return(fdr_vec)
 }
 
-
-
 clust_dist_sample <- function(vr,rand_df){
   #browser()
   stopifnot(requireNamespace("VariantAnnotation",quietly = TRUE))
@@ -110,14 +108,6 @@ clust_dist_sample <- function(vr,rand_df){
 
   return(vr)
 }
-
-
-
-
-
-
-
-
 
 sample_free_clusters <- function(dat_gr,rand_df,plot=FALSE) {
 
