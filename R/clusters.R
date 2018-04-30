@@ -62,7 +62,60 @@ compute_fdr_basic <- function(pos_distance,random_matrix){
   return(fdr_vec)
 }
 
-clust_dist_sample <- function(vr,rand_df){
+
+
+clust_dist <- function(vr,rand_df,no_cores = NULL,ce_cutoff=1){
+  #browser()
+
+  stopifnot(requireNamespace("VariantAnnotation",quietly = TRUE))
+
+  # split the data
+  split_factor = VariantAnnotation::sampleNames(vr)
+
+  # this should generate a list of indices
+  idx_split = base::split(seq_along(split_factor), split_factor)
+
+  # this should generate a list with 2 elements divided by sample
+  input_list = purrr::map(.x = idx_split,function(x){
+    list(vr = vr[x],RAND = rand_df[x,])
+  })
+
+  # prepare the cluster
+  if (!is.null(no_cores)){
+    stopifnot(requireNamespace("parallel",quietly = TRUE))
+    library(parallel)
+    cl = makeCluster(no_cores)
+    clusterEvalQ(cl = cl, library(clustMut))
+    clusterEvalQ(cl = cl, library(VariantAnnotation))
+
+    res = parLapply(cl = cl,
+              X = input_list,
+              fun = function(x){
+                clust_dist_sample(vr = x$vr,rand_df = x$RAND)
+              } )
+
+    parallel::stopCluster(cl)
+  } else {
+    res = lapply(input_list, function(x){
+      clust_dist_sample(vr = x$vr,rand_df = x$RAND)
+    })
+  }
+
+  # merge back
+  definitive = res[[1]]
+  if (length(res) > 1){
+    for (i in 2:length(res)){ definitive = c(definitive,res[[i]])}
+  }
+  return(definitive)
+}
+
+
+
+
+
+
+
+clust_dist_sample <- function(vr,rand_df,ce_cutoff = 1){
   #browser()
   stopifnot(requireNamespace("VariantAnnotation",quietly = TRUE))
 
@@ -80,7 +133,7 @@ clust_dist_sample <- function(vr,rand_df){
 
   # filter complex events
 
-  ce_mask = mask_complex_events(vr)
+  ce_mask = mask_complex_events(vr,cutoff = ce_cutoff)
 
   vr = vr[!ce_mask]
   rand_df = rand_df[!ce_mask,]
@@ -91,7 +144,7 @@ clust_dist_sample <- function(vr,rand_df){
                                             f = split_factor,
                                             no_cores = NULL) # explore this
 
-  gr_dist = distanceToNearest(vr)
+  gr_dist = GenomicRanges::distanceToNearest(vr)
   # so when a chromosome only have one mutation
   vr = vr[queryHits(gr_dist)]
   rand_dist = rand_dist[queryHits(gr_dist),]
