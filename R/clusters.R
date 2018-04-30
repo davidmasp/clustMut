@@ -8,7 +8,20 @@
 #
 ###############################################################################
 
+plot_exp <- function(vr,filename = "expected_distances.pdf"){
+  pdf(file = filename,paper = "a4r")
 
+  vr %>% base::split(VariantAnnotation::sampleNames(.)) %>%
+    purrr::walk(function(x){
+
+      fp = plot_eedistances(x$dist,x$exp_dist,fdr = x$fdr,
+                       sample = unique(VariantAnnotation::sampleNames(x)))
+
+      print(fp)
+    })
+
+  dev.off()
+}
 
 
 plot_eedistances <- function(mdist,rdist,fdr,sample) {
@@ -18,10 +31,14 @@ plot_eedistances <- function(mdist,rdist,fdr,sample) {
   require(ggplot2)
 
   nclust = sum(fdr<0.2)
+
+  predicted_tp = sum(1 - fdr)
+
   clust_per = scales::percent(nclust/length(fdr))
 
   caption_text = glue::glue("Clust Muts = {nclust} ({clust_per})
-                             {format(length(fdr)/2000,digits=2)} mutations / Mbp")
+                             {format(length(fdr)/2000,digits=2)} mutations / Mbp
+                            Predicted total cluster TP {predicted_tp}")
 
   df = data.frame(
     fdr = fdr[order(mdist)],
