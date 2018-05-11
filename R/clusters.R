@@ -8,6 +8,20 @@
 #
 ###############################################################################
 
+plot_exp <- function(vr,filename = "expected_distances.pdf"){
+  pdf(file = filename,paper = "a4r")
+
+  vr %>% base::split(VariantAnnotation::sampleNames(.)) %>%
+    purrr::walk(function(x){
+
+      fp = plot_eedistances(x$dist,x$exp_dist,fdr = x$fdr,
+                       sample = unique(VariantAnnotation::sampleNames(x)))
+
+      print(fp)
+    })
+
+  dev.off()
+}
 
 
 plot_eedistances <- function(mdist,rdist,fdr,sample) {
@@ -17,10 +31,14 @@ plot_eedistances <- function(mdist,rdist,fdr,sample) {
   require(ggplot2)
 
   nclust = sum(fdr<0.2)
+
+  predicted_tp = sum(1 - fdr)
+
   clust_per = scales::percent(nclust/length(fdr))
 
   caption_text = glue::glue("Clust Muts = {nclust} ({clust_per})
-                             {format(length(fdr)/2000,digits=2)} mutations / Mbp")
+                             {format(length(fdr)/2000,digits=2)} mutations / Mbp
+                            Predicted total cluster TP {predicted_tp}")
 
   df = data.frame(
     fdr = fdr[order(mdist)],
@@ -54,13 +72,112 @@ compute_fdr_basic <- function(pos_distance,random_matrix){
   random_matrix = random_matrix + 1
 
   fdr_matrix = apply(random_matrix,2,function(y){
-    localFDR::compute_densityfdr(obs = log(pos_distance), null = log(y))
+    localFDR::compute_densityfdr(obs = log(pos_distance), null = log(y),alternative="left")
   })
 
   fdr_vec = apply(fdr_matrix,1,median)
   return(fdr_vec)
 }
 
+
+
+clust_dist <- function(vr,rand_df,no_cores = NULL,ce_cutoff=1){
+  #browser()
+
+  stopifnot(requireNamespace("VariantAnnotation",quietly = TRUE))
+
+  # split the data
+  split_factor = VariantAnnotation::sampleNames(vr)
+
+  # this should generate a list of indices
+  idx_split = base::split(seq_along(split_factor), split_factor)
+
+  # this should generate a list with 2 elements divided by sample
+  input_list = purrr::map(.x = idx_split,function(x){
+    list(vr = vr[x],RAND = rand_df[x,])
+  })
+
+  # prepare the cluster
+  if (!is.null(no_cores)){
+    stopifnot(requireNamespace("parallel",quietly = TRUE))
+    library(parallel)
+    cl = makeCluster(no_cores)
+    clusterEvalQ(cl = cl, library(clustMut))
+    clusterEvalQ(cl = cl, library(VariantAnnotation))
+
+    res = parLapply(cl = cl,
+              X = input_list,
+              fun = function(x){
+                clust_dist_sample(vr = x$vr,rand_df = x$RAND)
+              } )
+
+    parallel::stopCluster(cl)
+  } else {
+    res = lapply(input_list, function(x){
+      clust_dist_sample(vr = x$vr,rand_df = x$RAND)
+    })
+  }
+
+  # merge back
+  definitive = res[[1]]
+  if (length(res) > 1){
+    for (i in 2:length(res)){ definitive = c(definitive,res[[i]])}
+  }
+  return(definitive)
+}
+
+
+
+
+
+
+
+clust_dist_sample <- function(vr,rand_df,ce_cutoff = 1){
+  #browser()
+  stopifnot(requireNamespace("VariantAnnotation",quietly = TRUE))
+
+  ######### ONE SAMPLE ASSUMPTION
+  stopifnot(length(unique(VariantAnnotation::sampleNames(vr))) == 1 )
+
+  #browser()
+
+  ## FILTERS
+  n_mask = grepl("N",vr$ctx)
+  warning(glue::glue("{scales::percent(sum(n_mask)/length(vr))} removed due to N mask"))
+
+  vr = vr[!n_mask]
+  rand_df = rand_df[!n_mask,]
+
+  # filter complex events
+
+  ce_mask = mask_complex_events(vr,cutoff = ce_cutoff)
+
+  vr = vr[!ce_mask]
+  rand_df = rand_df[!ce_mask,]
+
+  # compute distances in the random data
+  split_factor = seqnames(vr)
+  rand_dist = compute_distances_splited_tbl(rand_df,
+                                            f = split_factor,
+                                            no_cores = NULL) # explore this
+
+  gr_dist = GenomicRanges::distanceToNearest(vr)
+  # so when a chromosome only have one mutation
+  vr = vr[queryHits(gr_dist)]
+  rand_dist = rand_dist[queryHits(gr_dist),]
+  mdist = mcols(gr_dist)$distance + 1
+  random_matrix = as.matrix(rand_dist)
+
+  fdr = compute_fdr_basic(pos_distance = mdist,
+                          random_matrix = random_matrix)
+
+  vr$fdr = fdr
+  vr$dist = mdist
+  vr$exp_dist = random_matrix[,sample(ncol(random_matrix),size = 1)]
+  vr$tp = sum(1- vr$fdr)
+
+  return(vr)
+}
 
 sample_free_clusters <- function(dat_gr,rand_df,plot=FALSE) {
 
