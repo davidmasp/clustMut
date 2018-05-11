@@ -31,6 +31,4 @@ vr_res = clust_dist(vr = tmp$VR,rand_df = tmp$RAND,no_cores = 5)
 vr_res
 MSM = genomicHelpersDMP::compute_MSM(vr = vr_res[vr_res$fdr<0.2],
                                tp = T)
-
-
 ```

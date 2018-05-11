@@ -1,6 +1,24 @@
 library(clustMut)
 library(parallel)
 library(magrittr)
+library(genomicHelpersDMP)
+
+
+path = "Y:/users/dmas/data/TCGA_MUTS/BLCA-BI/"
+file_paths = fs::dir_ls(path,
+                   glob = "*-randomized.tsv",
+                   recursive = TRUE)
+
+dat = purrr::map_df(file_paths,readr::read_tsv)
+
+tmp = parse_randommut_vr(dat)
+unique(VariantAnnotation::sampleNames(tmp$VR))
+vr_res = clust_dist(vr = tmp$VR,rand_df = tmp$RAND,no_cores = 5)
+plot_exp(vr_res)
+MSM = compute_MSM(vr = vr_res[vr_res$fdr<0.2],
+                                     tp = T)
+
+
 
 ## generate the output path
 today = format(Sys.time(), "%Y%m%d")

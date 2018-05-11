@@ -11,30 +11,6 @@
 
 
 ## VAF general ====================
-# this functions are used in the clean.R script, don't remove
-
-#' Compute VAF
-#'
-#' @param alt_reads reads of the alternative allele, note that this definition may mean different things.
-#' @param total_reads total number of reads
-#' @param method a character string indicating which VAF method should be used. One of 'symmetric', 'reduction' or 'simple' (default)
-#'
-#' @return
-#' @export
-#'
-#' @examples
-compute_VAF <- function(alt_reads,total_reads,method = "simple"){
-  VAF_vec = alt_reads/total_reads
-  if(method == "symmetric"){
-    VAF_vec[VAF_vec > 0.5] = 1 -VAF_vec[VAF_vec>0.5]
-  } else if (method == "reduction") {
-    VAF_vec[VAF_vec > .5] = ">.5" # SELF NOTE! improve this #CAREFULL
-  } else if (method =="simple"){
-    VAF_vec = VAF_vec
-  } else {
-    stop("Method not yet implemented. Available methods 'symmetric', 'reduction' and 'simple'")
-  }
-}
 
 
 compute_vafLR <- function(vaf1,vaf2){

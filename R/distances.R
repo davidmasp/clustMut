@@ -10,35 +10,6 @@
 
 
 
-distance_per_sample_VR <- function(VR) {
-  SN = sampleNames(VR)
-  lvls = levels(SN)
-  lvls_list = lvls %>% purrr::map(function(x) which(SN == x))
-  names(lvls_list) <- lvls
-
-  distance_df = lvls_list %>% purrr::map_df(function(x){
-    stopifnot(unique(sampleNames(VR[x])) != 1)
-    dobj = distanceToNearest(VR[x])
-    dist_df = data.frame(idx = x[queryHits(dobj)],
-                         distance = mcols(dobj)$distance)
-
-    return(dist_df)
-  })
-
-  if (length(VR) != nrow(distance_df)){
-    warning("Single chromosome mutation. Setting to -1.")
-  }
-
-  distance = integer(length(VR))
-  distance[distance_df$idx] = distance_df$distance
-  distance[-distance_df$idx] = -1
-  mcols(VR)$distance = distance
-
-  return(VR)
-}
-
-
-
 # ======= LOW LEVEL ======= #
 
 #' Get mutation distance
@@ -89,63 +60,6 @@ compute_m_distance <- function(x,k=1,use = min){
 
 
 # ======= PER SAMPLE LEVEL ======= #
-
-# order mantained in parallel execution
-# I checked a bit and seems to be the case
-
-#'Compute Distances in splited GR
-#'
-#' Compute minimum distance between adjacent mutation spliting by a factor. This
-#' factor can be either the seqnames (chromosomes) and/or samples.
-#'
-#' @param gr Genomic Ranges object.
-#' @param f factor to group rows, if more than one group is required you should input a list containing both factors.
-#' @param no_cores if null normal execution, if integer, parallel mode is triggered with the number of cores specified.
-#'
-#' @return
-#' @export
-#'
-#' @examples
-compute_distances_splited <- function(gr,
-                                     f,
-                                     bcparams=NULL){
-
-  if (is.null(bcparams)){
-    bcparams = BiocParallel::SerialParam()
-  }
-
-  total_muts = length(gr)
-
-  gr$distance = -1
-  # see this caveat of spliting the GR https://support.bioconductor.org/p/42606/
-  # main thing is that GRlist is not a normal list.
-  # so we cannot assign new columns in a list-wise manner.
-  # To do a workaround, I create the column BEFORE spliting
-  # and then put a impossible number
-
-  if (is.list(f)) f <- interaction(f, drop = TRUE)
-
-  gr_per_chr =  base::split(gr,f)
-
-  mdist_per_chr = BiocParallel::bplapply(gr_per_chr,
-                           distanceToNearest,
-                           BPPARAM = bcparams)
-
-  #browser()
-  # this way I mantain the genomic ranges structure. (but very slow...)
-  for (i in names(mdist_per_chr)){
-    #browser()
-    tmp = gr_per_chr[[i]]
-    mdist = mdist_per_chr[[i]]
-    mcols(mdist)$distance =  as.integer(mcols(mdist)$distance + 1) # memory
-    tmp[queryHits(mdist)]$distance = mcols(mdist)$distance
-    gr_per_chr[[i]] = tmp
-  }
-
-  gr = unlist_GR_base_list(gr_per_chr)
-
-  return(gr)
-}
 
 #' Randomized distances
 #'
