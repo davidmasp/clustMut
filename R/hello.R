@@ -106,11 +106,8 @@ binom_test <- function(x,n,p,...){
 
 
 unlist_GR_base_list <- function(x){
-  #browser()
-  master_gr = x[[1]]
-  for (i in 2:length(x)){
-    master_gr = c(master_gr,x[[i]])
-  }
+  names(x) = NULL
+  master_gr = do.call("c",x)
 
   return(master_gr)
 }
