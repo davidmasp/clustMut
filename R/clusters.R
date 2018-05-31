@@ -94,8 +94,17 @@ compute_fdr_basic <- function(pos_distance,random_matrix){
 
 
 
-clust_dist <- function(vr,rand_df,no_cores = NULL,ce_cutoff=1){
-  #browser()
+clust_dist <- function(vr,
+                       rand_df,
+                       no_cores = NULL,
+                       ce_cutoff=1,
+                       method="fdr", # FDR
+                       dist_cutoff = NULL){
+
+  if (!is.null(dist_cutoff) & method == "fdr"){
+    warning("A distance cutoff exist but method set to fdr, dropping distance cutoff")
+    dist_cutoff = NULL
+  }
 
   stopifnot(requireNamespace("VariantAnnotation",quietly = TRUE))
 
@@ -117,28 +126,34 @@ clust_dist <- function(vr,rand_df,no_cores = NULL,ce_cutoff=1){
     cl = makeCluster(no_cores)
     clusterEvalQ(cl = cl, library(clustMut))
     clusterEvalQ(cl = cl, library(VariantAnnotation))
+    clusterExport(cl = cl,varlist = c("dist_cutoff"))
 
     res = parLapply(cl = cl,
               X = input_list,
               fun = function(x){
-                clust_dist_sample(vr = x$vr,rand_df = x$RAND)
+                switch (method,
+                  fdr = clust_dist_sample(vr = x$vr,rand_df = x$RAND),
+                  FDR = clust_dist_sample_FDR(vr = x$vr,
+                                              rand_df = x$RAND,
+                                              dist_cutoff = dist_cutoff)
+                )
               } )
 
     parallel::stopCluster(cl)
   } else {
     res = lapply(input_list, function(x){
-      clust_dist_sample(vr = x$vr,rand_df = x$RAND)
+      switch (method,
+              fdr = clust_dist_sample(vr = x$vr,rand_df = x$RAND),
+              FDR = clust_dist_sample_FDR(vr = x$vr,
+                                          rand_df = x$RAND,
+                                          dist_cutoff = dist_cutoff)
+      )
     })
   }
 
   definitive = unlist_GR_base_list(res)
   return(definitive)
 }
-
-
-
-
-
 
 
 clust_dist_sample <- function(vr,rand_df,ce_cutoff = 1){
@@ -244,4 +259,72 @@ write_clust_muts <- function(dat_gr,clust_mask,filename){
   gr = dat_gr[clust_mask]
   mut_code = generate_mut_format(gr)
   readr::write_lines(mut_code,path = filename)
+}
+
+
+
+
+
+
+#### FDR ######
+
+clust_dist_sample_FDR <- function(vr,rand_df,ce_cutoff = 1,dist_cutoff){
+  #browser()
+  stopifnot(requireNamespace("VariantAnnotation",quietly = TRUE))
+
+  ######### ONE SAMPLE ASSUMPTION
+  stopifnot(length(unique(VariantAnnotation::sampleNames(vr))) == 1 )
+
+  #browser()
+
+  ## FILTERS
+  n_mask = grepl("N",vr$ctx)
+  warning(glue::glue("{scales::percent(sum(n_mask)/length(vr))} removed due to N mask"))
+
+  vr = vr[!n_mask]
+  rand_df = rand_df[!n_mask,]
+
+  # filter complex events
+
+  ce_mask = mask_complex_events(vr,cutoff = ce_cutoff)
+
+  vr = vr[!ce_mask]
+  rand_df = rand_df[!ce_mask,]
+
+  # compute distances in the random data
+  split_factor = seqnames(vr)
+  rand_dist = compute_distances_splited_tbl(rand_df,
+                                            f = split_factor,
+                                            no_cores = NULL) # explore this
+
+  gr_dist = GenomicRanges::distanceToNearest(vr)
+  # so when a chromosome only have one mutation
+  vr = vr[queryHits(gr_dist)]
+  rand_dist = rand_dist[queryHits(gr_dist),]
+  mdist = mcols(gr_dist)$distance + 1
+  random_matrix = as.matrix(rand_dist)
+
+  FDR = compute_FDR_basic(pos_distance = mdist,
+                          dist_cutoff = dist_cutoff,
+                          random_matrix = random_matrix)
+
+  vr$FDR = FDR
+  vr$DIST = mean(mdist)
+  vr$tp = sum(1- vr$FDR)
+
+  return(vr)
+}
+
+
+
+
+compute_FDR_basic <- function(pos_distance,random_matrix,dist_cutoff){
+  observed = sum(pos_distance < dist_cutoff)
+  expected = apply(random_matrix, 2, function(x){sum(x < dist_cutoff)})
+
+  expected = median(expected)
+
+  FDR = expected / observed
+
+  return(FDR)
 }
