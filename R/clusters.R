@@ -310,8 +310,6 @@ clust_dist_sample_FDR <- function(vr,rand_df,ce_cutoff = 1,dist_cutoff){
 
   vr$FDR = FDR
   vr$DIST = mean(mdist)
-  vr$tp = sum(1- vr$FDR)
-
   return(vr)
 }
 
