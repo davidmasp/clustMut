@@ -366,6 +366,9 @@ local_vaflr_fdr <- function(vr,
 
   stopifnot(is(vr,"VRanges"))
 
+  # single sample assumption
+  stopifnot(length(unique(sampleNames(vr))) == 1)
+
   dat = vr
 
   dat$mutid = glue::glue("{seqnames(dat)}_{start(dat)}_{alt(dat)}_{end(dat)}")
