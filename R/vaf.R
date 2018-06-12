@@ -451,11 +451,11 @@ local_vaflr_fdr <- function(vr,
     dplyr::group_by(mutid) %>%
     dplyr::summarise(n = n(), fdr = median(fdr))
 
-  # this is per sample so I can do this
-  fdrsdf$tp = sum(1-fdrsdf$fdr,
-                  na.rm = TRUE)
+  mcols(dat) = mcols(dat) %>% as.data.frame() %>%
+    dplyr::full_join(fdrsdf,by = "mutid")
 
-  mcols(dat) = mcols(dat) %>% as.data.frame() %>% dplyr::full_join(fdrsdf)
+  # this is per sample so I can do this
+  dat$tp = sum(1-fdrsdf$fdr,na.rm = TRUE)
   return(dat)
 
 }
