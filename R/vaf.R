@@ -449,7 +449,7 @@ local_vaflr_fdr <- function(vr,
   fdrsdf = data.frame(mutid = c(nclust$mut1,nclust$mut2),fdr = c(nclust$fdr,nclust$fdr))
   fdrsdf = fdrsdf %>%
     dplyr::group_by(mutid) %>%
-    dplyr::summarise(n = n(), vaf_fdr_median = median(fdr))
+    dplyr::summarise(n = n(), fdr = median(fdr))
 
 
   mcols(dat) = mcols(dat) %>% as.data.frame() %>% dplyr::full_join(fdrsdf)
