@@ -1,6 +1,6 @@
 # clustMut
 
-The goal of clustMut is to ...
+The  goal of clustMut is to ...
  
 ## Example
 
