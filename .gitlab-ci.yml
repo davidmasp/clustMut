@@ -1,5 +1,8 @@
 image: rocker/rstudio  
-test:  
+test:
+  tags:
+    - test
+    - build
    script:
     - R -e 'install.packages(c("ggplot2"))'
     - R CMD build . --no-build-vignettes --no-manual
