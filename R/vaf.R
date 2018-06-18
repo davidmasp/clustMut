@@ -433,7 +433,8 @@ local_vaflr_fdr <- function(vr,
 
     fdrs = 1:length(bins) %>% purrr::map_dbl(function(i){
 
-      pos = dpos[[i]] %>% cut(c(seq(0,0.9,by = 0.1),Inf),include.lowest = T) %>% table
+      pos = dpos[[i]] %>% cut(c(seq(0,0.9,by = 0.1),Inf),
+                              include.lowest = TRUE) %>% table
 
       fdr = neg[bins[i]]/(pos[bins[i]] + neg[bins[i]])
     })
