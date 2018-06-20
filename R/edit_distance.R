@@ -21,17 +21,17 @@ edit_distance_fdr <- function(vr,pairs_size, k, genome){
   K = 2*k + 1
   # one sample assumption
   stopifnot(length(unique(sampleNames(vr))) == 1)
-  dat = vr
-  dat$mutid = glue::glue("{seqnames(dat)}_{start(dat)}_{alt(dat)}_{end(dat)}")
+
+  vr$mutid = glue::glue("{seqnames(vr)}_{start(vr)}_{alt(vr)}_{end(vr)}")
 
 
   # match the genome. This is a bit tricky, maybe should control more. see
-  seqlevelsStyle(dat) = provider(genome)
+  seqlevelsStyle(vr) = provider(genome)
 
   # solve this
-  dat = dat[seqnames(dat) %in% genomicHelpersDMP::chromosomes_UCSC_in]
+  vr = vr[seqnames(vr) %in% genomicHelpersDMP::chromosomes_UCSC_in]
 
-  dat_split <- base::split(dat,seqnames(dat))
+  dat_split <- base::split(vr,seqnames(vr))
 
   dat_split %>% purrr::map_df(function(x){ #could be paral
     #browser()
@@ -107,13 +107,13 @@ edit_distance_fdr <- function(vr,pairs_size, k, genome){
     dplyr::group_by(mutid) %>%
     dplyr::summarise(n = n(), fdr = median(fdr))
 
-  mcols(dat) = mcols(dat) %>% as.data.frame() %>%
+  mcols(vr) = mcols(vr) %>% as.data.frame() %>%
     dplyr::full_join(fdrsdf,by = "mutid")
 
   # this is per sample so I can do this
-  dat$tp = sum(1-fdrsdf$fdr,na.rm = TRUE)
+  vr$tp = sum(1-fdrsdf$fdr,na.rm = TRUE)
 
-  return(dat)
+  return(vr)
 }
 
 
