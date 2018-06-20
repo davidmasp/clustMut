@@ -126,8 +126,9 @@ clust_dist <- function(vr,
     cl = makeCluster(no_cores)
     clusterEvalQ(cl = cl, library(clustMut))
     clusterEvalQ(cl = cl, library(VariantAnnotation))
-    clusterExport(cl = cl,varlist = c("dist_cutoff"))
-
+    if (!is.null(dist_cutoff)){
+      clusterExport(cl = cl,varlist = c("dist_cutoff"))
+    }
     res = parLapply(cl = cl,
               X = input_list,
               fun = function(x){
