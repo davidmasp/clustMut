@@ -29,7 +29,9 @@ edit_distance_fdr <- function(vr,pairs_size, k, genome){
   seqlevelsStyle(vr) = provider(genome)
 
   # solve this
-  vr = vr[seqnames(vr) %in% genomicHelpersDMP::chromosomes_UCSC_in]
+  #print(seqnames(vr))
+  #print(seqnames(vr))
+  vr = vr[as.character(seqnames(vr)) %in% as.character(seqnames(genome))]
 
   dat_split <- base::split(vr,seqnames(vr))
 
