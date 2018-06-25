@@ -1,7 +1,8 @@
 image: rocker/rstudio  
 test:
    script:
-    - R -e 'install.packages(c("ggplot2"))'
+    - R -e 'install.packages(c("ggplot2","dplyr","tidyselect","purrr","broom","testhat"))'
+    - R -e 'source("https://bioconductor.org/biocLite.R");biocLite("GenomicRanges")'
     - R CMD build . --no-build-vignettes --no-manual
     - PKG_FILE_NAME=$(ls -1t *.tar.gz | head -n 1)
     - R CMD check "${PKG_FILE_NAME}" --no-build-vignettes --no-manual
