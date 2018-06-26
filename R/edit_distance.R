@@ -1,17 +1,30 @@
-# EDIT distance
 
-# str1 = c(
-#   "TCGAC>T",
-#   "TCCAC>G",
-#   "TTTTT>G"
-# )
-#
-# str2 = c(
-#   "TCGTC>T",
-#   "TCCTC>G",
-#   "AAAAA>G"
-# )
 
+
+compute_edit_distance <- function(str,sep = NULL){
+  # thisshpuld disallow indels (not sure how to test it)
+  stM = matrix(c(0,1,1,.5,1,0,0.5,1,1,0.5,0,1,.5,1,1,0),
+               ncol = 4,
+               dimnames = list(c("A","C","T","G"),c("A","C","T","G")))
+
+  if (is.null(sep)){
+    sep =  unique(stringr::str_extract(str,pattern = "[^ACTGN]"))
+    stopifnot(length(sep)==1)
+  }
+
+  if (!is.na(sep)) {
+    str = stringr::str_replace(string = str,pattern = sep,replacement = "")
+  }
+  #browser()
+  dna_str = Biostrings::DNAStringSet(str)
+
+  as.matrix(Biostrings::stringDist(dna_str,
+                         diag = T,
+                         upper = T,
+                         method = "substitutionMatrix",
+                         substitutionMatrix = stM))
+
+}
 
 edit_distance_fdr <- function(vr,
                               pairs_size,
@@ -61,9 +74,7 @@ edit_distance_fdr <- function(vr,
       purrr::map_df(function(y){
         #browser()
         MS = genomicHelpersDMP::get_MS_VR(y, k = k,genome = genome)
-        MS = stringr::str_sub(MS,1,K)
-
-        precomp_adist = adist(MS)
+        precomp_adist = compute_edit_distance(MS)
         diag(precomp_adist)=NA # this are the withitself values.
 
         dist= GenomicRanges::distanceToNearest(y)
@@ -84,7 +95,6 @@ edit_distance_fdr <- function(vr,
             precomp_adist[i,j]
           })
 
-        #browser()
         expct = as.numeric(precomp_adist)
         expct = expct[!is.na(expct)]
         expct = sample(expct,replace = FALSE,
@@ -92,12 +102,13 @@ edit_distance_fdr <- function(vr,
         # problematic line here
 
         mxEditDistance = max(c(expct,pair_edit_dist))
-
+        mxEditDistance = ceiling(mxEditDistance)
         exp = expct %>% cut(c(seq(0,
                                   mxEditDistance,
                                   by = 1)),
                             include.lowest = T) %>%
           table
+
 
         obs_vec = pair_edit_dist %>% cut(c(seq(0,
                                                mxEditDistance,
