@@ -20,6 +20,13 @@ test_that("multiplication works", {
 #                          c(9,0,0,9,1,1,6,-1))
 #   })
 
+test_that("distance", {
+  v1 = c(1,3,20,21,26)
+  v2 = c(26,21,1,20,3)
+  expect_equal(compute_m_distance(v1,k=2),c(19,18,6,18,6))
+  expect_equal(compute_m_distance(v2,k=2),c(6,18,19,6,18))
+})
+
 
 test_that("edit distance", {
   str3 = c("TATATAGC",
