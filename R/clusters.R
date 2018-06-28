@@ -99,6 +99,7 @@ clust_dist <- function(vr,
                        no_cores = NULL,
                        ce_cutoff=1,
                        method="fdr", # FDR
+                       n = 1,
                        dist_cutoff = NULL){
 
   if (!is.null(dist_cutoff) & method == "fdr"){
@@ -133,10 +134,13 @@ clust_dist <- function(vr,
               X = input_list,
               fun = function(x){
                 switch (method,
-                  fdr = clust_dist_sample(vr = x$vr,rand_df = x$RAND),
+                  fdr = clust_dist_sample(vr = x$vr,
+                                          rand_df = x$RAND,
+                                          n = n),
                   FDR = clust_dist_sample_FDR(vr = x$vr,
                                               rand_df = x$RAND,
-                                              dist_cutoff = dist_cutoff)
+                                              dist_cutoff = dist_cutoff,
+                                              n = n)
                 )
               } )
 
@@ -144,10 +148,13 @@ clust_dist <- function(vr,
   } else {
     res = lapply(input_list, function(x){
       switch (method,
-              fdr = clust_dist_sample(vr = x$vr,rand_df = x$RAND),
+              fdr = clust_dist_sample(vr = x$vr,
+                                      rand_df = x$RAND,
+                                      n = n),
               FDR = clust_dist_sample_FDR(vr = x$vr,
                                           rand_df = x$RAND,
-                                          dist_cutoff = dist_cutoff)
+                                          dist_cutoff = dist_cutoff,
+                                          n = n)
       )
     })
   }
@@ -158,7 +165,7 @@ clust_dist <- function(vr,
 
 
 clust_dist_sample <- function(vr,rand_df,ce_cutoff = 1,n = 1){
-  #browser()
+
   stopifnot(requireNamespace("VariantAnnotation",quietly = TRUE))
 
   ######### ONE SAMPLE ASSUMPTION
@@ -181,12 +188,12 @@ clust_dist_sample <- function(vr,rand_df,ce_cutoff = 1,n = 1){
   rand_df = rand_df[!ce_mask,]
 
   # compute distances in the random data
-  split_factor = seqnames(vr)
+  split_factor = as.character(seqnames(vr))
   rand_dist = compute_distances_splited_tbl(rand_df,
                                             f = split_factor,
-                                            no_cores = NULL,
                                             k = n) # explore this
 
+  #browser()
   if (n ==1 & is.integer(n)){
     gr_dist = GenomicRanges::distanceToNearest(vr)
     # so when a chromosome only have one mutation
@@ -199,8 +206,8 @@ clust_dist_sample <- function(vr,rand_df,ce_cutoff = 1,n = 1){
     # so when a chromosome only have one mutation
     na_mask = is.na(vr$distance)
     vr = vr[!na_mask]
-    rand_dist = rand_dist[!na_mask]
-    # should I add up 1?
+    rand_dist = rand_dist[!na_mask,]
+    mdist = mcols(vr)$distance + 1
     random_matrix = as.matrix(rand_dist)
   } else {
     stop("n should be a positive integer number")
@@ -225,7 +232,9 @@ sample_free_clusters <- function(dat_gr,rand_df,plot=FALSE) {
 
   #browser()
   n_mask = grepl("N",dat_gr$ctx)
-  print(glue::glue("{scales::percent(sum(n_mask)/length(dat_gr))} removed due to N mask"))
+  print(
+    glue::glue(
+      "{scales::percent(sum(n_mask)/length(dat_gr))} removed due to N mask"))
 
   dat_gr = dat_gr[!n_mask]
   rand_df = rand_df[!n_mask,]
@@ -238,7 +247,8 @@ sample_free_clusters <- function(dat_gr,rand_df,plot=FALSE) {
   rand_df = rand_df[!ce_mask,]
 
   split_factor = seqnames(dat_gr)
-  rand_dist = compute_distances_splited_tbl(rand_df,f = split_factor,no_cores = 5)
+  rand_dist = compute_distances_splited_tbl(rand_df,
+                                            f = split_factor)
 
   gr_dist = distanceToNearest(dat_gr)
   # so when a chromosome only have one mutation
@@ -282,7 +292,7 @@ write_clust_muts <- function(dat_gr,clust_mask,filename){
 
 #### FDR ######
 
-clust_dist_sample_FDR <- function(vr,rand_df,ce_cutoff = 1,dist_cutoff){
+clust_dist_sample_FDR <- function(vr,rand_df,ce_cutoff = 1,dist_cutoff,n=1){
   #browser()
   stopifnot(requireNamespace("VariantAnnotation",quietly = TRUE))
 
@@ -309,14 +319,26 @@ clust_dist_sample_FDR <- function(vr,rand_df,ce_cutoff = 1,dist_cutoff){
   split_factor = seqnames(vr)
   rand_dist = compute_distances_splited_tbl(rand_df,
                                             f = split_factor,
-                                            no_cores = NULL) # explore this
+                                            k = n)
 
-  gr_dist = GenomicRanges::distanceToNearest(vr)
-  # so when a chromosome only have one mutation
-  vr = vr[queryHits(gr_dist)]
-  rand_dist = rand_dist[queryHits(gr_dist),]
-  mdist = mcols(gr_dist)$distance + 1
-  random_matrix = as.matrix(rand_dist)
+  if (n ==1 & is.integer(n)){
+    gr_dist = GenomicRanges::distanceToNearest(vr)
+    # so when a chromosome only have one mutation
+    vr = vr[queryHits(gr_dist)]
+    rand_dist = rand_dist[queryHits(gr_dist),]
+    mdist = mcols(gr_dist)$distance + 1
+    random_matrix = as.matrix(rand_dist)
+  } else if (n > 1 & is.integer(n)) {
+    vr = compute_distance_vr(vr = vr,enclosing = n)
+    # so when a chromosome only have one mutation
+    na_mask = is.na(vr$distance)
+    vr = vr[!na_mask]
+    rand_dist = rand_dist[!na_mask]
+    # should I add up 1?
+    random_matrix = as.matrix(rand_dist)
+  } else {
+    stop("n should be a positive integer number")
+  }
 
   FDR = compute_FDR_basic(pos_distance = mdist,
                           dist_cutoff = dist_cutoff,
