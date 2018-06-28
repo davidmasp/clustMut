@@ -84,56 +84,46 @@ compute_m_distance <- function(x,k=1,use = min){
 #' @examples
 compute_distances_splited_tbl <- function(x,
                                           f,
-                                          k=1,
-                                          no_cores = NULL){
+                                          k=1){
+
   requireNamespace("dplyr", quietly = TRUE)
   requireNamespace("purrr", quietly = TRUE)
-  # prepare cluster
-  if (!is.null(no_cores)){
+
+  if (is.list(f)){
+    f <- interaction(f,drop = TRUE)
+  }
+
+
+  idx = 1:length(f)
+  idx_l = base::split(x = idx,f = f)
+
+
+  rand_dist = lapply(idx_l,function(i){
     #browser()
-    requireNamespace("parallel", quietly = TRUE)
-    cl <- parallel::makeCluster(no_cores)
-    parallel::clusterEvalQ(cl, { library(clustMut)})
-  }
+    if (ncol(x) == 1){
+      tmpdf = as.data.frame(x[i,])
+    } else {
+      tmpdf = x[i,]
+    }
 
+    dist_df = apply(tmpdf,2,compute_m_distance,k=k)
 
-  if (is.list(f)) f <- interaction(f,drop = TRUE)
+    # legacy ?
+    if(nrow(x) == 1){
+      warning("1 position in group")
+      dist_df = t(dist_df)
+    }
 
-  if (!is.null(no_cores)){
-    df_splited = base::split(x = x,f = f)
-    rand_dist = parallel::parLapply(cl = cl,
-                                    X = df_splited,
-                                    fun = function(x){
-        dist_df = apply(x,2,compute_m_distance,k = k)
-        if(nrow(x) == 1){
-          warning("1 position in group")
-          dist_df = t(dist_df)
-        }
-        dist_df = data.frame(dist_df)
-        return(dist_df)
-      })
-  } else {
-
-    rand_dist = x %>% split(f) %>% purrr::map(function(x){
-
-      dist_df = apply(x,2,compute_m_distance,k=k)
-
-      if(nrow(x) == 1){
-        warning("1 position in group")
-        dist_df = t(dist_df)
-      }
-
-      dist_df = data.frame(dist_df)
-      return(dist_df)
-    })
-  }
+    dist_df = data.frame(dist_df)
+    dist_df$idx = i
+    return(dist_df)
+  })
 
   rand_dist = dplyr::bind_rows(rand_dist)
-
-  if (!is.null(no_cores)){
-    parallel::stopCluster(cl)
-  }
-
+  rand_dist = rand_dist[order(rand_dist$idx),]
+  rand_dist = dplyr::select(rand_dist,-idx)
+  colnames(rand_dist) = colnames(x)
+  rownames(rand_dist) = NULL
   return(rand_dist)
 }
 

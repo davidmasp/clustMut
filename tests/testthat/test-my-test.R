@@ -27,6 +27,39 @@ test_that("distance", {
   expect_equal(compute_m_distance(v2,k=2),c(6,18,19,6,18))
 })
 
+test_that("distance tabl", {
+
+  df = data.frame(
+            V1 = c(1L, 10L, 15L, 20L, 200L),
+            V2 = c(3L, 9L, 16L, 22L, 220L),
+            V3 = c(2L, 8L, 18L, 17L, 215L),
+            V4 = c(1L, 7L, 14L, 250L, 200L)
+  )
+
+  res = data.frame(
+          V1 = c(14L, 10L, 14L, 10L, 185L),
+          V2 = c(13L, 13L, 13L, 13L, 204L),
+          V3 = c(15L, 10L, 10L, 15L, 198L),
+          V4 = c(13L, 193L, 13L, 236L, 193L)
+  )
+
+  expect_equal(compute_distances_splited_tbl(df,factor(rep("a",5)),2),
+                res)
+})
+
+test_that("distance tabl 2", {
+
+  df = data.frame(V1 = c(10L, 20L, 10L, 20L, 25L, 1L, 21L, 210L, 200L, 15L))
+
+  fact = c("a", "a", "b", "b", "a", "a", "b", "b", "b", "a")
+  res = data.frame(
+    V1 = c(10L, 10L, 11L, 180L, 10L, 14L, 11L, 189L, 180L, 10L)
+  )
+
+  expect_equal(compute_distances_splited_tbl(df,f = fact,k = 2),
+               res)
+})
+
 
 test_that("edit distance", {
   str3 = c("TATATAGC",

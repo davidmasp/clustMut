@@ -4,12 +4,14 @@
 \alias{compute_distances_splited_tbl}
 \title{Randomized distances}
 \usage{
-compute_distances_splited_tbl(x, f, no_cores = NULL)
+compute_distances_splited_tbl(x, f, k = 1)
 }
 \arguments{
 \item{x}{a dataframe or tibble object}
 
 \item{f}{factor to group rows, if more than one group is required you should input a list containing both factors.}
+
+\item{k}{number of mutations that should be enclosed in the mutation pair.}
 
 \item{no_cores}{if null normal execution, if integer, parallel mode is triggered with the number of cores specified.}
 }
