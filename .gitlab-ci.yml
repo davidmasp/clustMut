@@ -1,6 +1,7 @@
 image: rocker/rstudio  
 test:
    script:
+    - git clone http://gitlab-ci-token:${CI_JOB_TOKEN}@fsupeksvr.irbbarcelona.pcb.ub.es/gitlab/dmas/clustmut-run.git
     - R -e 'install.packages(c("ggplot2","dplyr","tidyselect","purrr","broom","testhat"))'
     - R -e 'source("https://bioconductor.org/biocLite.R");biocLite("GenomicRanges")'
     - R CMD build . --no-build-vignettes --no-manual
