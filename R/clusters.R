@@ -157,7 +157,7 @@ clust_dist <- function(vr,
 }
 
 
-clust_dist_sample <- function(vr,rand_df,ce_cutoff = 1){
+clust_dist_sample <- function(vr,rand_df,ce_cutoff = 1,n = 1){
   #browser()
   stopifnot(requireNamespace("VariantAnnotation",quietly = TRUE))
 
@@ -184,14 +184,27 @@ clust_dist_sample <- function(vr,rand_df,ce_cutoff = 1){
   split_factor = seqnames(vr)
   rand_dist = compute_distances_splited_tbl(rand_df,
                                             f = split_factor,
-                                            no_cores = NULL) # explore this
+                                            no_cores = NULL,
+                                            k = n) # explore this
 
-  gr_dist = GenomicRanges::distanceToNearest(vr)
-  # so when a chromosome only have one mutation
-  vr = vr[queryHits(gr_dist)]
-  rand_dist = rand_dist[queryHits(gr_dist),]
-  mdist = mcols(gr_dist)$distance + 1
-  random_matrix = as.matrix(rand_dist)
+  if (n ==1 & is.integer(n)){
+    gr_dist = GenomicRanges::distanceToNearest(vr)
+    # so when a chromosome only have one mutation
+    vr = vr[queryHits(gr_dist)]
+    rand_dist = rand_dist[queryHits(gr_dist),]
+    mdist = mcols(gr_dist)$distance + 1
+    random_matrix = as.matrix(rand_dist)
+  } else if (n > 1 & is.integer(n)) {
+    vr = compute_distance_vr(vr = vr,enclosing = n)
+    # so when a chromosome only have one mutation
+    na_mask = is.na(vr$distance)
+    vr = vr[!na_mask]
+    rand_dist = rand_dist[!na_mask]
+    # should I add up 1?
+    random_matrix = as.matrix(rand_dist)
+  } else {
+    stop("n should be a positive integer number")
+  }
 
   fdr = compute_fdr_basic(pos_distance = mdist,
                           random_matrix = random_matrix)

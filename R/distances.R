@@ -75,6 +75,7 @@ compute_m_distance <- function(x,k=1,use = min){
 #'
 #' @param x a dataframe or tibble object
 #' @param f factor to group rows, if more than one group is required you should input a list containing both factors.
+#' @param k number of mutations that should be enclosed in the mutation pair.
 #' @param no_cores if null normal execution, if integer, parallel mode is triggered with the number of cores specified.
 #'
 #' @return
@@ -83,6 +84,7 @@ compute_m_distance <- function(x,k=1,use = min){
 #' @examples
 compute_distances_splited_tbl <- function(x,
                                           f,
+                                          k=1,
                                           no_cores = NULL){
   requireNamespace("dplyr", quietly = TRUE)
   requireNamespace("purrr", quietly = TRUE)
@@ -102,7 +104,7 @@ compute_distances_splited_tbl <- function(x,
     rand_dist = parallel::parLapply(cl = cl,
                                     X = df_splited,
                                     fun = function(x){
-        dist_df = apply(x,2,compute_m_distance)
+        dist_df = apply(x,2,compute_m_distance,k = k)
         if(nrow(x) == 1){
           warning("1 position in group")
           dist_df = t(dist_df)
@@ -114,7 +116,7 @@ compute_distances_splited_tbl <- function(x,
 
     rand_dist = x %>% split(f) %>% purrr::map(function(x){
 
-      dist_df = apply(x,2,compute_m_distance)
+      dist_df = apply(x,2,compute_m_distance,k=k)
 
       if(nrow(x) == 1){
         warning("1 position in group")
@@ -135,6 +137,47 @@ compute_distances_splited_tbl <- function(x,
   return(rand_dist)
 }
 
+
+
+
+#' Find IMD per mutation k pairs
+#'
+#' In a VR object, finds mutation pairs that enclose n number of mutations. It
+#' only selects the nearest pair.
+#' As a general way to handle this I would use nearesDistance if k=1.
+#'
+#' @param vr a VRanges object
+#' @param enclosing Number of mutations between pairs
+#'
+#' @return a VRanges object with a mdist column
+#' @export
+#'
+#' @examples
+compute_distance_vr <- function(vr,enclosing){
+  stopifnot(length(unique(sampleNames(vr))) == 1)
+  # single sample assumption
+  ## optional, if you want a genomic order of the chromosomes
+  stopifnot(!is.unsorted(vr))
+
+  mcols(vr)$distance = NA
+  ## split into a GRangesList
+  ## where each element has all ranges for one chromosome
+  vrl = split(vr, seqnames(vr))
+
+  ## apply a function to the ranges of each chromosome
+  res = lapply(names(vrl), function(x){
+    VR=vrl[[x]]
+    stopifnot(length(unique(seqnames(VR))) == 1)
+    dist = compute_m_distance(x = start(VR),k = enclosing,use = min)
+    mcols(VR)$distance = dist
+    return(VR)
+  })
+
+  # merge the result back
+  names(res) <- NULL
+  res = do.call("c",res)
+  return(res)
+}
 
 
 
