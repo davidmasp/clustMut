@@ -85,7 +85,9 @@ compute_fdr_basic <- function(pos_distance,random_matrix){
   random_matrix = random_matrix + 1
 
   fdr_matrix = apply(random_matrix,2,function(y){
-    localFDR::compute_densityfdr(obs = log(pos_distance), null = log(y),alternative="left")
+    compute_densityfdr(obs = log(pos_distance),
+                       null = log(y),
+                       alternative="left")
   })
 
   fdr_vec = apply(fdr_matrix,1,median)

@@ -18,7 +18,6 @@ Suggests:
     broom
 Imports: 
     GenomicRanges,
-    localFDR,
     dplyr,
     tidyselect,
     magrittr,
