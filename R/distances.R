@@ -25,13 +25,16 @@
 compute_distances <- function(x,k = 1,use = dplyr::lag){
   original_order <- order(x)
   x = x[original_order]
-  distance <- x - use(x,k=k)
+  distance <- x - use(x,n=k)
   distance <- abs(distance)
-  if(is.na(distance[1])){
-    distance[1] <- x[1]
-  } else if (is.na(distance[length(x)])){
-    distance[length(x)] = distance[length(x)-1]
-  }
+
+  # OPEN A ISSUE - need to check if this breaks smth
+  # if(all(is.na(distance[1:k]))){
+  #   # open a issue for this
+  #   distance[1:k] <- x[1:k]
+  # } else if (all(is.na(distance[(length(x)-k):length(x)]))){
+  #   distance[(length(x)-k):length(x)-1] = x[length(x)-1] - x[length(x)]
+  # }
 
   distance <- distance[order(original_order)]
   return(distance)
@@ -50,8 +53,13 @@ compute_distances <- function(x,k = 1,use = dplyr::lag){
 #'
 #' @examples
 compute_m_distance <- function(x,k=1,use = min){
-  prev = compute_distances(x,k=1,use = dplyr::lag)
-  post = compute_distances(x,k=1,use = dplyr::lead)
+  prev = compute_distances(x,k=k,use = dplyr::lag)
+  post = compute_distances(x,k=k,use = dplyr::lead)
+
+  # this is to remove NA
+  prev[is.na(prev)] = post[is.na(prev)]
+  post[is.na(post)] = prev[is.na(post)]
+
   # to check this matrix(c(c(1,2,3,2),c(1,1,1,1)),ncol = 2)
   dist = matrix(c(prev,post),ncol = 2)
   m_dist = apply(dist,1,use)
