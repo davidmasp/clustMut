@@ -151,6 +151,7 @@ compute_distance_vr <- function(vr,enclosing){
   mcols(vr)$distance = NA
   ## split into a GRangesList
   ## where each element has all ranges for one chromosome
+  seqlevels(vr) <- seqlevelsInUse(vr)
   vrl = split(vr, seqnames(vr))
 
   ## apply a function to the ranges of each chromosome
