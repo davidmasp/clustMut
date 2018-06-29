@@ -121,7 +121,7 @@ clust_dist <- function(vr,
   input_list = purrr::map(.x = idx_split,function(x){
     list(vr = vr[x],RAND = rand_df[x,])
   })
-
+  force(n)
   # prepare the cluster
   if (!is.null(no_cores)){
     stopifnot(requireNamespace("parallel",quietly = TRUE))
@@ -129,8 +129,9 @@ clust_dist <- function(vr,
     cl = makeCluster(no_cores)
     clusterEvalQ(cl = cl, library(clustMut))
     clusterEvalQ(cl = cl, library(VariantAnnotation))
+    clusterExport(cl = cl,varlist = c("n"),envir=environment())
     if (!is.null(dist_cutoff)){
-      clusterExport(cl = cl,varlist = c("dist_cutoff"))
+      clusterExport(cl = cl,varlist = c("dist_cutoff"),envir=environment())
     }
     res = parLapply(cl = cl,
               X = input_list,
@@ -173,7 +174,6 @@ clust_dist_sample <- function(vr,rand_df,ce_cutoff = 1,n = 1){
   ######### ONE SAMPLE ASSUMPTION
   stopifnot(length(unique(VariantAnnotation::sampleNames(vr))) == 1 )
 
-  #browser()
 
   ## FILTERS
   n_mask = grepl("N",vr$ctx)
@@ -194,9 +194,13 @@ clust_dist_sample <- function(vr,rand_df,ce_cutoff = 1,n = 1){
   rand_dist = compute_distances_splited_tbl(rand_df,
                                             f = split_factor,
                                             k = n) # explore this
+  # numeric problem issue #21
+  if (is.numeric(n) & n%%1==0){
+    n = as.integer(n)
+  }
 
-  #browser()
-  if (n ==1 & is.integer(n)){
+
+  if (n == 1 & is.integer(n)){
     gr_dist = GenomicRanges::distanceToNearest(vr)
     # so when a chromosome only have one mutation
     vr = vr[queryHits(gr_dist)]
