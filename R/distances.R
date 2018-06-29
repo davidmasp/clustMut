@@ -99,7 +99,6 @@ compute_distances_splited_tbl <- function(x,
 
 
   rand_dist = lapply(idx_l,function(i){
-    #browser()
     if (ncol(x) == 1){
       tmpdf = as.data.frame(x[i,])
     } else {
