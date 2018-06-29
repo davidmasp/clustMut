@@ -219,7 +219,7 @@ clust_dist_sample <- function(vr,rand_df,ce_cutoff = 1,n = 1){
   # what we do is to keep the NAs and then removing them at the fdr!
   stopifnot(sum(is.na(mdist)) == sum(is.na(random_matrix))/ncol(random_matrix))
   mdist = mdist[!is.na(mdist)]
-  random_matrix = apply(random_matrix, 2, function(x){x[is.na(x)]})
+  random_matrix = apply(random_matrix, 2, function(x){x[!is.na(x)]})
 
   fdr = compute_fdr_basic(pos_distance = mdist,
                           random_matrix = random_matrix)
