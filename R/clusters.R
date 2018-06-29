@@ -329,24 +329,32 @@ clust_dist_sample_FDR <- function(vr,rand_df,ce_cutoff = 1,dist_cutoff,n=1){
                                             f = split_factor,
                                             k = n)
 
-  if (n ==1 & is.integer(n)){
+  # numeric problem issue #21
+  if (is.numeric(n) & n%%1==0){
+    n = as.integer(n)
+  }
+
+
+  if (n == 1 & is.integer(n)){
     gr_dist = GenomicRanges::distanceToNearest(vr)
     # so when a chromosome only have one mutation
     vr = vr[queryHits(gr_dist)]
     rand_dist = rand_dist[queryHits(gr_dist),]
-    mdist = mcols(gr_dist)$distance + 1
+    mdist = mcols(gr_dist)$distance + 1 # this comes from GR distance
     random_matrix = as.matrix(rand_dist)
   } else if (n > 1 & is.integer(n)) {
     vr = compute_distance_vr(vr = vr,enclosing = n)
-    # so when a chromosome only have one mutation
-    na_mask = is.na(vr$distance)
-    vr = vr[!na_mask]
-    rand_dist = rand_dist[!na_mask]
-    # should I add up 1?
+    mdist = mcols(vr)$distance # here we don't need +1 because it's not GR
     random_matrix = as.matrix(rand_dist)
   } else {
     stop("n should be a positive integer number")
   }
+  # so when a chromosome only have one mutation we place a NA
+  # see issue #23 for more detail
+  # what we do is to keep the NAs and then removing them at the fdr!
+  stopifnot(sum(is.na(mdist)) == sum(is.na(random_matrix))/ncol(random_matrix))
+  mdist = mdist[!is.na(mdist)]
+  random_matrix = apply(random_matrix, 2, function(x){x[is.na(x)]})
 
   FDR = compute_FDR_basic(pos_distance = mdist,
                           dist_cutoff = dist_cutoff,
