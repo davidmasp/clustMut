@@ -2,33 +2,75 @@
 
 The goal of clustMut is to ...
 
-## Example
+## Installation
 
-This is a basic example which shows you how to solve a common problem:
+Install the package using:
 
-``` r
+```bash
+...
+```
 
-library(clustMut)
+Then, move the script to run to your `bin` or to a folder available in your `$PATH`.
 
-# steps single sample
-path = Sys.getenv("path_to_sample")
-dat = readr::read_tsv(path)
-tmp = parse_randommut_vr(dat)
-vr_res = clust_dist_sample(vr = tmp$VR,rand_df = tmp$RAND)
-vr_res 
-genomicHelpersDMP::compute_MSR(vr = vr_res[vr_res$fdr<0.2],
-                               tp = unique(vr_res$tp))
+```bash
+cp clustmut_run.sh ~/bin/
+```
 
+and give it execution permisions.
 
-# steps multiple
-file_paths= fs::dir_ls(Sys.getenv("path_to_randomut_out"),
-                       glob = "*_WGS_ssm_tcga_conf.tsv-randomized.tsv",
-                       recursive = TRUE)
-dat = purrr::map_df(file_paths,readr::read_tsv)
-tmp = parse_randommut_vr(dat)
-unique(VariantAnnotation::sampleNames(tmp$VR))
-vr_res = clust_dist(vr = tmp$VR,rand_df = tmp$RAND,no_cores = 5)
-vr_res
-MSM = genomicHelpersDMP::compute_MSM(vr = vr_res[vr_res$fdr<0.2],
-                               tp = T)
+```bash
+chmod +x script.sh
+```
+
+## Usage
+
+You can use clustmut to obtain kataegis events, clusters based on VAF or clustered mutations based on the Edit distance.
+Run it with the appropiate mode command.
+
+### VAF
+
+```bash
+clustmut_run.sh --mode vaf \
+                -i /home/dmas/data/TCGA_MUTS/TCGA_VR/ \
+                --glob "*_VR.rds" \
+                --recursive \
+                -a ~/data/CRG_alignability/hg19/LEGACY/crg36AlignExtNoBlackRmvsh19_RngMask_savedInt\=TRUE.bed \
+                -o test \
+                -Vlwtvu
+```
+
+### distance (difuse clusters)
+
+```bash
+clustmut_run.sh --mode distance \
+                -i /home/dmas/data/TCGA_MUTS/RNDmut/ \
+                --glob "*randomized.tsv" \
+                --recursive \
+                -o test_omichili \
+                -N 1 \
+                -Vlwtvu
+```
+
+### distance (kataegis)
+
+```bash
+clustmut_run.sh --mode distance \
+                -i /home/dmas/data/TCGA_MUTS/RNDmut/ \
+                --glob "*randomized.tsv" \
+                --recursive \
+                -o test_kataegis \
+                -N 4 \
+                -Vlwtvu
+```
+
+### edit
+
+```bash
+clustmut_run.sh --mode edit \
+                -i /home/dmas/data/TCGA_MUTS/TCGA_VR/ \
+                --glob "*_VR.rds" \
+                --recursive \
+                -a ~/data/CRG_alignability/hg19/LEGACY/crg36AlignExtNoBlackRmvsh19_RngMask_savedInt\=TRUE.bed \
+                -o test \
+                -Vlwtvu
 ```
