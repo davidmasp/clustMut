@@ -111,6 +111,12 @@ clust_dist <- function(vr,
 
   stopifnot(requireNamespace("VariantAnnotation",quietly = TRUE))
 
+  # sort the VR
+  vr_order = order(vr)
+  vr = vr[vr_order]
+  rand_df = rand_df[vr_order,]
+
+
   # split the data
   split_factor = VariantAnnotation::sampleNames(vr)
 
@@ -188,6 +194,7 @@ clust_dist_sample <- function(vr,rand_df,ce_cutoff = 1,n = 1){
 
   vr = vr[!ce_mask]
   rand_df = rand_df[!ce_mask,]
+
 
   # compute distances in the random data
   split_factor = as.character(seqnames(vr))
@@ -332,6 +339,7 @@ clust_dist_sample_FDR <- function(vr,rand_df,ce_cutoff = 1,dist_cutoff,n=1){
 
   vr = vr[!ce_mask]
   rand_df = rand_df[!ce_mask,]
+
 
   # compute distances in the random data
   split_factor = seqnames(vr)
