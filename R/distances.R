@@ -105,15 +105,14 @@ compute_distances_splited_tbl <- function(x,
       tmpdf = x[i,]
     }
 
-    dist_df = apply(tmpdf,2,compute_m_distance,k=k)
+    dist_df = as.data.frame(apply(tmpdf,2,compute_m_distance,k=k))
 
-    # legacy ?
-    if(nrow(x) == 1){
+    if(nrow(tmpdf) == 1){
       warning("1 position in group")
-      dist_df = t(dist_df)
+      dist_df = as.data.frame(t(dist_df))
+      rownames(dist_df) = NULL
     }
 
-    dist_df = data.frame(dist_df)
     dist_df$idx = i
     return(dist_df)
   })

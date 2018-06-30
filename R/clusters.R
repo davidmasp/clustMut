@@ -217,7 +217,11 @@ clust_dist_sample <- function(vr,rand_df,ce_cutoff = 1,n = 1){
   # so when a chromosome only have one mutation we place a NA
   # see issue #23 for more detail
   # what we do is to keep the NAs and then removing them at the fdr!
-  stopifnot(sum(is.na(mdist)) == sum(is.na(random_matrix))/ncol(random_matrix))
+
+  if (!sum(is.na(mdist)) == sum(is.na(random_matrix))/ncol(random_matrix)){
+    stop("Error kjsdkjhfdksa")
+  }
+
   na_mask = !is.na(mdist)
   mdist = mdist[na_mask]
   vr <- vr[na_mask]
