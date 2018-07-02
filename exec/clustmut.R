@@ -282,7 +282,7 @@ if (opt$mode == "distance"){ # if distance -i should be randommut out
   # DISTANCE ===============================================================
   library(progress)
   pb <- progress_bar$new(
-    format = " Reading files :percent eta: :eta",
+    format = "Distance analysis, :percent done. eta: :eta",
     total = length(file_paths), clear = FALSE)
   print("test")
   vr_res = purrr::map(file_paths,function(x){
@@ -312,8 +312,6 @@ if (opt$mode == "distance"){ # if distance -i should be randommut out
 
     # analysis ===================
     tmp = parse_randommut_vr(dat)
-    all_samples = length(unique(VariantAnnotation::sampleNames(tmp$VR)))
-    cli::boxx(glue::glue("Number of samples detected: {all_samples}"))
 
     vr_res = clust_dist(vr = tmp$VR,
                         rand_df = tmp$RAND,
@@ -329,6 +327,9 @@ if (opt$mode == "distance"){ # if distance -i should be randommut out
   print("ploting files.")
   plot_exp(vr_res,filename = glue::glue("{opt$outuput_prefix}_plot.pdf"))
 
+
+  all_samples = length(unique(VariantAnnotation::sampleNames(vr_res)))
+  cli::boxx(glue::glue("Number of samples detected: {all_samples}"))
 
 } else if (opt$mode == "vaf") { # read rds VR files
   # VAF ====================================================================
