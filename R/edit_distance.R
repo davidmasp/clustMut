@@ -32,7 +32,7 @@ edit_distance_fdr <- function(vr,
                               genome,
                               simulation_size){
   #browser()
-  library(VariantAnnotation)
+  suppressPackageStartupMessages(library(VariantAnnotation))
   library(magrittr)
 
   K = 2*k + 1
