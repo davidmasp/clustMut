@@ -38,7 +38,6 @@ plot_exp_list <- function(vr){
 }
 
 plot_eedistances <- function(mdist,rdist,fdr,sample) {
-  #browser()
   library(cowplot)
   library(viridis)
   require(ggplot2)
@@ -78,7 +77,6 @@ plot_eedistances <- function(mdist,rdist,fdr,sample) {
 
 compute_fdr_basic <- function(pos_distance,random_matrix){
   # this is to avoid log(0) should be done internally I guess.
-  #browser()
   stopifnot(nrow(random_matrix) == length(pos_distance))
 
   pos_distance = pos_distance + 1
@@ -112,7 +110,7 @@ clust_dist <- function(vr,
   stopifnot(requireNamespace("VariantAnnotation",quietly = TRUE))
 
   # sort the VR
-  vr_order = order(vr)
+  vr_order = GenomicRanges::order(vr)
   vr = vr[vr_order]
   rand_df = rand_df[vr_order,]
 
@@ -255,7 +253,6 @@ sample_free_clusters <- function(dat_gr,rand_df,plot=FALSE) {
 
   stopifnot(length(unique(dat_gr$sample)) == 1 )
 
-  #browser()
   n_mask = grepl("N",dat_gr$ctx)
   print(
     glue::glue(
@@ -318,13 +315,11 @@ write_clust_muts <- function(dat_gr,clust_mask,filename){
 #### FDR ######
 
 clust_dist_sample_FDR <- function(vr,rand_df,ce_cutoff = 1,dist_cutoff,n=1){
-  #browser()
   stopifnot(requireNamespace("VariantAnnotation",quietly = TRUE))
 
   ######### ONE SAMPLE ASSUMPTION
   stopifnot(length(unique(VariantAnnotation::sampleNames(vr))) == 1 )
 
-  #browser()
 
   ## FILTERS
   n_mask = grepl("N",vr$ctx)
