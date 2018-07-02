@@ -144,8 +144,6 @@ compute_distances_splited_tbl <- function(x,
 compute_distance_vr <- function(vr,enclosing){
   stopifnot(length(unique(sampleNames(vr))) == 1)
   # single sample assumption
-  ## optional, if you want a genomic order of the chromosomes
-  stopifnot(!is.unsorted(vr))
 
   mcols(vr)$distance = NA
   ## split into a GRangesList
@@ -157,6 +155,10 @@ compute_distance_vr <- function(vr,enclosing){
   res = lapply(names(vrl), function(x){
     VR=vrl[[x]]
     stopifnot(length(unique(seqnames(VR))) == 1)
+    ## optional, if you want a genomic order of the chromosomes
+    if (is.unsorted(VR)){
+      stop("VR object not sorted (or seqlevels not sorted)")
+    }
     dist = compute_m_distance(x = start(VR),k = enclosing,use = min)
     mcols(VR)$distance = dist
     return(VR)
