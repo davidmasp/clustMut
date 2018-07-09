@@ -5,11 +5,12 @@ stopifnot(requireNamespace("cli",quietly = T))
 stopifnot(requireNamespace("clustMut",quietly = T))
 
 
-cli::rule(center = "ClustMut - Distance Mode")
-cli::boxx(c(glue::glue("clustmut version: {packageVersion('clustMut')}"),
+cat(cli::rule(center = "ClustMut"))
+cat("\n")
+cat(cli::boxx(c(glue::glue("clustmut version: {packageVersion('clustMut')}"),
             "DMP: david.mas@irbbarcelona.org"),
-          padding = 1, align = "center")
-
+          padding = 1, align = "center"))
+cat("\n")
 # optparse =====================================================================
 suppressPackageStartupMessages(require(optparse))
 
@@ -329,7 +330,9 @@ if (opt$mode == "distance"){ # if distance -i should be randommut out
 
 
   all_samples = length(unique(VariantAnnotation::sampleNames(vr_res)))
-  cli::boxx(glue::glue("Number of samples detected: {all_samples}"))
+  cat("\n")
+  cat(cli::boxx(glue::glue("Number of samples detected: {all_samples}")))
+  cat("\n")
 
 } else if (opt$mode == "vaf") { # read rds VR files
   # VAF ====================================================================
