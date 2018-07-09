@@ -68,6 +68,15 @@ parse_randommut_out <- function(dat){
 }
 
 
+#' Mask complex events and unique mutations in a chromosome
+#'
+#' @param gr a VRanges object (unisample)
+#' @param cutoff minimum distance to consider as a complex event
+#'
+#' @return
+#' @export
+#'
+#' @examples
 mask_complex_events <- function(gr, cutoff = 1) {
   #### unique sample assumtion
   if (is(gr, "VRanges")) {
@@ -81,7 +90,8 @@ mask_complex_events <- function(gr, cutoff = 1) {
 
   ndist = distanceToNearest(gr)
   idx = queryHits(ndist)
-  ce_mask = !logical(length = length(gr)) # this also removes mutations that are unique in a particular chromosome
+  # this also removes mutations that are unique in a particular chromosome
+  ce_mask = !logical(length = length(gr))
   ce_mask[idx] = mcols(ndist)$distance < cutoff
   warning(
     glue::glue(

@@ -285,7 +285,7 @@ if (opt$mode == "distance"){ # if distance -i should be randommut out
   pb <- progress_bar$new(
     format = "Distance analysis, :percent done. eta: :eta",
     total = length(file_paths), clear = FALSE)
-  print("test")
+
   vr_res = purrr::map(file_paths,function(x){
 
     dat = suppressMessages(readr::read_tsv(x))
