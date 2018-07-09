@@ -176,8 +176,8 @@ clust_dist_sample <- function(vr,rand_df,ce_cutoff = 1,n = 1){
   stopifnot(requireNamespace("VariantAnnotation",quietly = TRUE))
 
   ######### ONE SAMPLE ASSUMPTION
-  stopifnot(length(unique(VariantAnnotation::sampleNames(vr))) == 1 )
-
+  sample_name = unique(VariantAnnotation::sampleNames(vr))
+  stopifnot(length(sample_name) == 1 )
 
   ## FILTERS
   n_mask = grepl("N",vr$ctx)
@@ -187,12 +187,15 @@ clust_dist_sample <- function(vr,rand_df,ce_cutoff = 1,n = 1){
   rand_df = rand_df[!n_mask,]
 
   # filter complex events
-
-  ce_mask = mask_complex_events(vr,cutoff = ce_cutoff)
+  ce_mask = mask_complex_events(vr, cutoff = ce_cutoff)
 
   vr = vr[!ce_mask]
   rand_df = rand_df[!ce_mask,]
 
+  if (0 == length(vr)){
+    warning(glue::glue("Sample {sample_name} removed because no valid mutations were available"))
+    return(NULL)
+  }
 
   # compute distances in the random data
   split_factor = as.character(seqnames(vr))
@@ -207,7 +210,8 @@ clust_dist_sample <- function(vr,rand_df,ce_cutoff = 1,n = 1){
 
   if (n == 1 & is.integer(n)){
     gr_dist = GenomicRanges::distanceToNearest(vr)
-    # so when a chromosome only have one mutation
+    # so when a chromosome only have one mutation, this should not be a problem
+    # because we are removing this cases. Still good to be safe
     vr = vr[queryHits(gr_dist)]
     rand_dist = rand_dist[queryHits(gr_dist),]
     mdist = mcols(gr_dist)$distance + 1 # this comes from GR distance
@@ -228,6 +232,10 @@ clust_dist_sample <- function(vr,rand_df,ce_cutoff = 1,n = 1){
   }
 
   na_mask = !is.na(mdist)
+  if (sum(na_mask) == 0){
+    warning(glue::glue("Sample {sample_name} was removed because not enough mutations were found."))
+    return(NULL)
+  }
   mdist = mdist[na_mask]
   vr <- vr[na_mask]
   random_matrix = apply(random_matrix, 2, function(x){x[!is.na(x)]})
@@ -335,6 +343,10 @@ clust_dist_sample_FDR <- function(vr,rand_df,ce_cutoff = 1,dist_cutoff,n=1){
   vr = vr[!ce_mask]
   rand_df = rand_df[!ce_mask,]
 
+  if (0 == length(vr)){
+    warning(glue::glue("Sample {sample_name} removed because no valid mutations were available"))
+    return(NULL)
+  }
 
   # compute distances in the random data
   split_factor = seqnames(vr)
@@ -367,6 +379,10 @@ clust_dist_sample_FDR <- function(vr,rand_df,ce_cutoff = 1,dist_cutoff,n=1){
   # what we do is to keep the NAs and then removing them at the fdr!
   stopifnot(sum(is.na(mdist)) == sum(is.na(random_matrix))/ncol(random_matrix))
   mdist = mdist[!is.na(mdist)]
+  if (sum(!is.na(mdist)) == 0){
+    warning(glue::glue("Sample {sample_name} was removed because not enough mutations were found."))
+    return(NULL)
+  }
   random_matrix = apply(random_matrix, 2, function(x){x[is.na(x)]})
 
   FDR = compute_FDR_basic(pos_distance = mdist,
