@@ -15,5 +15,14 @@ sandbox_vaf.*
 
 output
 
+wf
+
+benchmark
+
+*.rds
+
+doc
+
+*.txt
 
 
