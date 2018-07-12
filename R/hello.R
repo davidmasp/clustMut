@@ -15,7 +15,8 @@ parse_randommut_vr <- function(dat){
   #browser()
   requireNamespace("dplyr", quietly = TRUE)
   requireNamespace("tidyselect", quietly = TRUE)
-  suppressPackageStartupMessages(library(VariantAnnotation))
+  # suppressPackageStartupMessages(library(VariantAnnotation))
+  # should be solved after issue #26
 
   dat_vr = VRanges(seqnames = dat$chr,
                    ranges = IRanges(start = dat$end,
