@@ -1,6 +1,23 @@
-# roberts
+# ROBERTS ======================================================================
 
 
+#' Cluster mutations Roberts 2012
+#'
+#' This functions implements the method in Roberts, S. A. et al. Molecular Cell (2012) to call clusterd mutations. Regions with local higher hypermutation than expected.
+#'
+#' WARNING: This method considers the MR constant in each sample.
+#'
+#' @param vr A VRanges object
+#' @param delta The maximum window size to consider mutations candidates for clustering
+#' @param ce_cutoff Complex events cutoff, only last one will be kept
+#' @param G_percent Percentatge of the human genome used
+#' @param pval_cutoff P value to decide
+#' @param dbSNP a SNPLoc object that contains the appropiate dbSNP release
+#'
+#' @return
+#' @export
+#'
+#' @examples
 roberts_clusters <- function(vr,
                              delta = 10000,
                              ce_cutoff = 10,
@@ -10,6 +27,8 @@ roberts_clusters <- function(vr,
 
     # step 0: Unique sample assumption
   stopifnot(length(unique(sampleNames(vr))) == 1)
+
+  stopifnot(!is.unsorted(vr)) # ???
 
   # step 1: Total number of mutations
   n = length(vr)
@@ -40,7 +59,8 @@ roberts_clusters <- function(vr,
 
 roberts_significance <- function(clusts,pval_cutoff){
   clusts = clusts[mcols(clusts)$pval < pval_cutoff]
-  values_idx = purrr::map2( queryHits(clusts),subjectHits(clusts),
+  values_idx = purrr::map2( S4Vectors::queryHits(clusts),
+                            S4Vectors::subjectHits(clusts),
                             function(from,to){
                               return(from:to)
                               })
@@ -50,16 +70,18 @@ roberts_significance <- function(clusts,pval_cutoff){
   return(values_idx)
 }
 
-roberts_find_clust <- function(vr,delta,p){
-  clust_cand = find_pairs_VR(vr,win_length = delta)
-  pvals = purrr::map2_dbl(queryHits(clust_cand),
-              subjectHits(clust_cand),
-              function(from,to){
-    x = start(vr[to]) - start(vr[from]) + 1 # because VR 1-based
-    k = length( vr[from:to])
-    pval = roberts_pvalue(x = x,k = k,p = p)
-    return(pval)
-  })
+roberts_find_clust <- function(vr, delta, p) {
+  clust_cand = find_pairs_VR(vr, win_length = delta)
+  pvals = purrr::map2_dbl(S4Vectors::queryHits(clust_cand),
+                          S4Vectors::subjectHits(clust_cand),
+                          function(from, to) {
+                            x = start(vr[to]) - start(vr[from]) + 1
+                            # because VR 1-based
+                            k = length(vr[from:to])
+                            # I need the vr to be sorted!
+                            pval = roberts_pvalue(x = x, k = k, p = p)
+                            return(pval)
+                          })
 
   mcols(clust_cand)$pval = pvals
 
@@ -73,9 +95,9 @@ roberts_group_ce <- function(vr,ce_cutoff,remove = "first"){
   ol =length(vr)
 
   if (remove == "first"){
-    vr = vr[-queryHits(pairs)]
+    vr = vr[-S4Vectors::queryHits(pairs)]
   } else {
-    vr = vr[-subjectHits(pairs)]
+    vr = vr[-S4Vectors::subjectHits(pairs)]
   }
 
   per = scales::percent(1-(length(vr)/ol))
@@ -86,8 +108,8 @@ roberts_group_ce <- function(vr,ce_cutoff,remove = "first"){
 
 roberts_filter_dbSNP <- function(vr,dbSNP){
   snips = BSgenome::snpsByOverlaps(dbSNP,vr)
-  ovrlaps = findOverlaps(query = snips,subject = vr)
-  hitsindbSNP = subjectHits(ovrlaps)
+  ovrlaps = GenomicRanges::findOverlaps(query = snips,subject = vr)
+  hitsindbSNP = S4Vectors::subjectHits(ovrlaps)
   alleles = genomicHelpersDMP::dna_codes[as.character(snips$alleles_as_ambig)]
 
   mask_alleles = unlist(purrr::map2(alleles,
@@ -106,7 +128,7 @@ roberts_filter_dbSNP <- function(vr,dbSNP){
   return(vr)
 }
 
-#' Title
+#' Compute the negative binomial pvalue
 #'
 #' @param x number of nucleotides in the cluster
 #' @param k number of mutations in the cluster
@@ -117,7 +139,7 @@ roberts_filter_dbSNP <- function(vr,dbSNP){
 #'
 #' @examples
 roberts_pvalue <- function(x, k, p){
-  #browser()
+
   pos = x-k
   iter = 0:pos
 
@@ -129,3 +151,47 @@ roberts_pvalue <- function(x, k, p){
 
   return(res)
 }
+
+
+
+
+# NIKKLIEA ======================================================================
+
+
+custom_basic_clustering <- function(vr,
+                                    IMD,
+                                    nmuts){
+
+  # step 0. check if sorted
+  stopifnot(!is.unsorted(vr))
+
+  # step 1. find pairs
+  pairs = find_pairs_VR(vr,IMD)
+
+  # step 2. get the n muts in each pair
+  muts = purrr::map2_dbl(S4Vectors::queryHits(pairs),
+                         S4Vectors::subjectHits(pairs),
+                         function(from,to){
+    muts = vr[from:to] # this needs the VR to be sorted
+    return(length(muts))
+  })
+
+  # step 3. filter
+  mask = muts >= nmuts
+  pairs = pairs[mask]
+
+  selected_muts = purrr::map2(S4Vectors::queryHits(pairs),
+                              S4Vectors::subjectHits(pairs),
+                            function(from,to){
+                              return(from:to)
+                            })
+
+  selected_muts = unique(unlist(selected_muts))
+
+  vr$custom_clust = FALSE
+  vr[selected_muts]$custom_clust = TRUE
+
+  return(vr)
+}
+
+
