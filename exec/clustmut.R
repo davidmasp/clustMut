@@ -218,59 +218,6 @@ if (interactive()){
 # opt$recursive = TRUE
 #  opt$alignability_mask = "E:/local-data/CRG_alignability/hg19/LEGACY/crg36AlignExtNoBlackRmvsh19_RngMask_savedInt=TRUE.bed"
 
-VR_preprocessing <- function(file_paths,pair_set,alignability_mask){
-  # read the filter
-  alignability_bed = rtracklayer::import.bed(alignability_mask)
-  library(progress)
-  pb <- progress_bar$new(
-    format = "Reading files :percent eta: :eta",
-    total = length(file_paths), clear = FALSE)
-
-  dat_list = purrr::map(file_paths,function(x){
-
-
-    suppressPackageStartupMessages(library(VariantAnnotation))
-    # needed eventually I guess
-    dat = readRDS(x)
-    seqlevelsStyle(dat) <- "UCSC"
-    original = length(dat)
-
-    # apparently this happens in ICGC
-    mask = (ref(dat) == alt(dat))
-    dat = dat[!mask]
-
-    # check for duplicates
-    mutid = paste(seqnames(dat),start(dat),sampleNames(dat),alt(dat),sep = ":")
-    mask_duplicated = duplicated(mutid)
-    dat = dat[!mask_duplicated]
-
-    # remove bases outside the predefined set
-    ref_in = genomicHelpersDMP::dna_codes[[pair_set]]
-    mask=ref(dat) %in% ref_in
-    dat = dat[mask]
-
-    # I check if alignability filter is set
-    if (!is.null(alignability_mask)){
-      ovr = GenomicRanges::findOverlaps(query = dat,subject = alignability_bed)
-      # we keep the mutations that are included in the bed file !!!
-      dat = dat[S4Vectors::queryHits(ovr),]
-    }
-
-    after_filter = length(dat)
-    per = (1 - (after_filter/original)) %>% scales::percent()
-    if (opt$verbose){
-      print(glue::glue("{per} mutations discarded in sample {x}."))
-    }
-    pb$tick()
-
-    return(dat)
-  })
-  return(dat_list )
-}
-
-
-
-
 # MAIN ========================
 
 path = opt$data
