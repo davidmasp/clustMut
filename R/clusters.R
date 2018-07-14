@@ -132,7 +132,8 @@ clust_dist <- function(vr,
     library(parallel)
     cl = makeCluster(no_cores)
     clusterEvalQ(cl = cl, library(clustMut))
-    clusterEvalQ(cl = cl, library(VariantAnnotation))
+    # clusterEvalQ(cl = cl, library(VariantAnnotation))
+    # should be solved after issue #26
     clusterExport(cl = cl,varlist = c("n"),envir=environment())
     if (!is.null(dist_cutoff)){
       clusterExport(cl = cl,varlist = c("dist_cutoff"),envir=environment())

@@ -15,7 +15,8 @@ parse_randommut_vr <- function(dat){
   #browser()
   requireNamespace("dplyr", quietly = TRUE)
   requireNamespace("tidyselect", quietly = TRUE)
-  suppressPackageStartupMessages(library(VariantAnnotation))
+  # suppressPackageStartupMessages(library(VariantAnnotation))
+  # should be solved after issue #26
 
   dat_vr = VRanges(seqnames = dat$chr,
                    ranges = IRanges(start = dat$end,
@@ -122,5 +123,57 @@ unlist_GR_base_list <- function(x){
   return(master_gr)
 }
 
+
+
+VR_preprocessing <- function(file_paths,pair_set,alignability_mask){
+  # read the filter
+  alignability_bed = rtracklayer::import.bed(alignability_mask)
+  library(progress)
+  pb <- progress_bar$new(
+    format = "Reading files :percent eta: :eta",
+    total = length(file_paths), clear = FALSE)
+
+  dat_list = purrr::map(file_paths,function(x){
+
+
+    suppressPackageStartupMessages(library(VariantAnnotation))
+    # needed eventually I guess
+    dat = readRDS(x)
+    original = length(dat)
+
+    # apparently this happens in ICGC
+    mask = (ref(dat) == alt(dat))
+    dat = dat[!mask]
+
+    # check for duplicates
+    mutid = paste(seqnames(dat),start(dat),sampleNames(dat),alt(dat),sep = ":")
+    mask_duplicated = duplicated(mutid)
+    dat = dat[!mask_duplicated]
+
+    # remove bases outside the predefined set
+    ref_in = genomicHelpersDMP::dna_codes[[pair_set]]
+    mask=ref(dat) %in% ref_in
+    dat = dat[mask]
+
+    # I check if alignability filter is set
+    if (!is.null(alignability_mask)){
+      seqlevelsStyle(dat) <- "UCSC" # this is specific for my file, maybe should generalize (see issue #33)
+      ovr = GenomicRanges::findOverlaps(query = dat,subject = alignability_bed)
+      # we keep the mutations that are included in the bed file !!!
+      dat = dat[S4Vectors::queryHits(ovr),]
+      seqlevelsStyle(dat) <- "NCBI"
+    }
+
+    after_filter = length(dat)
+    per = (1 - (after_filter/original)) %>% scales::percent()
+    if (opt$verbose){
+      print(glue::glue("{per} mutations discarded in sample {x}."))
+    }
+    pb$tick()
+
+    return(dat)
+  })
+  return(dat_list )
+}
 
 
