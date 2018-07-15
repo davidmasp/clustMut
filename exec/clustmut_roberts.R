@@ -150,15 +150,16 @@ if (opt$verbose){
 
 
 if (interactive()){
-  opt$data= "~/data/TCGA_MUTS/TCGA_VR/LGG/"
+  opt$data= "~/data/TCGA_MUTS/TCGA_VR/BLCA/"
   opt$glob = "*_VR.rds"
   opt$recursive = TRUE
   opt$alignability_mask = "~/data/CRG_alignability/hg19/LEGACY/crg36AlignExtNoBlackRmvsh19_RngMask_savedInt=TRUE.bed"
 
-  opt$keepMSM = T
-  opt$keepVR = T
-  opt$mutlist = T
-  opt$keep_uncl = T
+  opt$keepMSM = TRUE
+  opt$keepVR = TRUE
+  opt$mutlist = TRUE
+  opt$keep_uncl = TRUE
+  opt$cores = 20
 }
 
 
@@ -270,11 +271,11 @@ if (opt$keepMSM){
 
 
   if (opt$unclustkeep){
-    MSM_uncl = compute_MSM(vr = vr_res[vr_res$fdr>=opt$fdr_cutoff | is.na(vr_res$fdr) ],
+    MSM_uncl = compute_MSM(vr = vr_res[! vr_res$roberts_clust ],
                            k = opt$kmer,
                            tp = FALSE)
 
-    MSM_uncl = MSM_uncl[rownames(MSM_clust),]
+    MSM_uncl = MSM_uncl[rownames(MSM_clust),] #(???)
 
 
     MSM_result = list(clust = MSM_clust,uncl = MSM_uncl)
