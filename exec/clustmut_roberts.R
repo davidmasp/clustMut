@@ -20,6 +20,12 @@ option_list = list(
     help = "Data folder"
   ),
   make_option(
+    c("-r", "--recursive"),
+    action = "store_true",
+    dest = "recursive",default = FALSE,
+    help = "Make the program look inside folders within the data folder "
+  ),
+  make_option(
     c("-a", "--alignability_mask"),
     action = "store",
     type = 'character',
@@ -144,10 +150,10 @@ if (opt$verbose){
 
 
 if (interactive()){
-  opt$data= "E:/local-data/TCGA_MUTS/TCGA_VR/"
+  opt$data= "~/data/TCGA_MUTS/TCGA_VR/LGG/"
   opt$glob = "*_VR.rds"
   opt$recursive = TRUE
-  opt$alignability_mask = "E:/local-data/CRG_alignability/hg19/LEGACY/crg36AlignExtNoBlackRmvsh19_RngMask_savedInt=TRUE.bed"
+  opt$alignability_mask = "~/data/CRG_alignability/hg19/LEGACY/crg36AlignExtNoBlackRmvsh19_RngMask_savedInt=TRUE.bed"
 
   opt$keepMSM = T
   opt$keepVR = T
@@ -161,14 +167,9 @@ file_paths = fs::dir_ls(path,
                         glob = opt$glob,
                         recursive = opt$recursive)
 
-
-file_paths = file_paths[1:10]
-
-
 dat = VR_preprocessing(file_paths = file_paths,
                              pair_set = opt$pair_set,
                              alignability_mask = opt$alignability_mask)
-
 
 if (!opt$use_dbSNP){
   stop("not implemented")
@@ -264,13 +265,14 @@ if (opt$keepMSM){
   # this could also be parallelized too.
 
   MSM_clust = compute_MSM(vr = selected_muts,
-                          k = opt$kmer)
+                          k = opt$kmer,
+                          tp = FALSE)
 
 
   if (opt$unclustkeep){
     MSM_uncl = compute_MSM(vr = vr_res[vr_res$fdr>=opt$fdr_cutoff | is.na(vr_res$fdr) ],
                            k = opt$kmer,
-                           tp = opt$true)
+                           tp = FALSE)
 
     MSM_uncl = MSM_uncl[rownames(MSM_clust),]
 

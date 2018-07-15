@@ -25,7 +25,8 @@ roberts_clusters <- function(vr,
                              pval_cutoff = 1e-4,
                              dbSNP) {
 
-    # step 0: Unique sample assumption
+  #browser()
+  # step 0: Unique sample assumption
   stopifnot(length(unique(sampleNames(vr))) == 1)
 
   stopifnot(!is.unsorted(vr)) # ???
@@ -52,12 +53,15 @@ roberts_clusters <- function(vr,
   idx = roberts_significance(clusts = clusters,
                                 pval_cutoff = pval_cutoff )
   vr$roberts_clust = FALSE
-  vr[idx]$roberts_clust = TRUE
+  if (length(idx) > 0){
+    vr[idx]$roberts_clust = TRUE
+  }
 
   return(vr)
 }
 
 roberts_significance <- function(clusts,pval_cutoff){
+  #browser()
   clusts = clusts[mcols(clusts)$pval < pval_cutoff]
   values_idx = purrr::map2( S4Vectors::queryHits(clusts),
                             S4Vectors::subjectHits(clusts),
@@ -66,7 +70,7 @@ roberts_significance <- function(clusts,pval_cutoff){
                               })
 
   values_idx = unlist(values_idx)
-  values_idx = values_idx[duplicated(values_idx)]
+  values_idx = values_idx[!duplicated(values_idx)]
   return(values_idx)
 }
 
@@ -162,8 +166,10 @@ custom_basic_clustering <- function(vr,
                                     IMD,
                                     nmuts){
 
-  # step 0. check if sorted
-  stopifnot(!is.unsorted(vr))
+  # step 0: Unique sample assumption
+  stopifnot(length(unique(sampleNames(vr))) == 1)
+
+  stopifnot(!is.unsorted(vr)) # ???
 
   # step 1. find pairs
   pairs = find_pairs_VR(vr,IMD)
