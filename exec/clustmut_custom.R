@@ -64,7 +64,7 @@ option_list = list(
   make_option(
     c("-I", "--IMD"),
     action = "store",
-    dest = "delta",default = 10000,
+    dest = "imd",default = 10000,
     help = "Cluster length"
   ),
   make_option(
@@ -147,10 +147,10 @@ if (opt$verbose){
 
 
 if (interactive()){
-  opt$data= "E:/local-data/TCGA_MUTS/TCGA_VR/"
+  opt$data= "~/data/TCGA_MUTS/TCGA_VR/LGG/"
   opt$glob = "*_VR.rds"
   opt$recursive = TRUE
-  opt$alignability_mask = "E:/local-data/CRG_alignability/hg19/LEGACY/crg36AlignExtNoBlackRmvsh19_RngMask_savedInt=TRUE.bed"
+  opt$alignability_mask = "~/data/CRG_alignability/hg19/LEGACY/crg36AlignExtNoBlackRmvsh19_RngMask_savedInt=TRUE.bed"
 
   opt$keepMSM = TRUE
   opt$keepVR = TRUE
@@ -179,7 +179,7 @@ if (opt$cores == 1 | is.null(opt$cores)){
 
   vr_res = purrr::map(dat,function(vr){
     vr_res = clustMut::custom_basic_clustering(vr = vr,
-                                               IMD = opt$IMD,
+                                               IMD = opt$imd,
                                                nmuts = opt$nmuts)
 
     pb$tick()
@@ -198,7 +198,7 @@ if (opt$cores == 1 | is.null(opt$cores)){
                      X = dat,
                      fun = function(vr){
                        vr_res = clustMut::custom_basic_clustering(vr = vr,
-                                                                  IMD = opt$IMD,
+                                                                  IMD = opt$imd,
                                                                   nmuts = opt$nmuts)
                        return(vr_res)
                      })
@@ -225,10 +225,10 @@ seqlevelsStyle(vr_res) <- "UCSC"
 
 if (opt$keepVR){
   saveRDS(object = vr_res,
-          file = glue::glue("{opt$outuput_prefix}_roberts_VRanges.rds"))
+          file = glue::glue("{opt$outuput_prefix}_custom_w{opt$imd}_n{opt$nmuts}_VRanges.rds"))
 }
 
-selected_muts = vr_res[vr_res$roberts_clust]
+selected_muts = vr_res[vr_res$custom_clust]
 
 
 # save a list output
@@ -240,7 +240,7 @@ if (opt$mutlist){
                 alt(selected_muts),
                 sep = ":")
 
-  readr::write_lines(mutid,path = glue::glue("{opt$outuput_prefix}_roberts_mutlist.txt"))
+  readr::write_lines(mutid,path = glue::glue("{opt$outuput_prefix}_custom_w{opt$imd}_n{opt$nmuts}_mutlist.txt"))
 }
 
 
@@ -254,7 +254,7 @@ if (opt$keepMSM){
 
 
   if (opt$unclustkeep){
-    MSM_uncl = compute_MSM(vr = vr_res[vr_res$fdr>=opt$fdr_cutoff | is.na(vr_res$fdr) ],
+    MSM_uncl = compute_MSM(vr = vr_res[!vr_res$custom_clust],
                            k = opt$kmer,
                            tp = FALSE)
 
@@ -267,7 +267,7 @@ if (opt$keepMSM){
   }
 
   saveRDS(object = MSM_result,
-          file = glue::glue("{opt$outuput_prefix}_roberts_MSM.rds"))
+          file = glue::glue("{opt$outuput_prefix}_custom_w{opt$imd}_n{opt$nmuts}_MSM.rds"))
 }
 
 

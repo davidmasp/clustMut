@@ -166,9 +166,9 @@ VR_preprocessing <- function(file_paths,pair_set,alignability_mask){
 
     after_filter = length(dat)
     per = (1 - (after_filter/original)) %>% scales::percent()
-    if (opt$verbose){
-      print(glue::glue("{per} mutations discarded in sample {x}."))
-    }
+
+    print(glue::glue("{per} mutations discarded in sample {x}."))
+
     pb$tick()
 
     return(dat)

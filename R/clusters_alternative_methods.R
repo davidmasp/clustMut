@@ -165,7 +165,6 @@ roberts_pvalue <- function(x, k, p){
 custom_basic_clustering <- function(vr,
                                     IMD,
                                     nmuts){
-
   # step 0: Unique sample assumption
   stopifnot(length(unique(sampleNames(vr))) == 1)
 
@@ -195,7 +194,10 @@ custom_basic_clustering <- function(vr,
   selected_muts = unique(unlist(selected_muts))
 
   vr$custom_clust = FALSE
-  vr[selected_muts]$custom_clust = TRUE
+
+  if (!is.null(selected_muts)){
+    vr[selected_muts]$custom_clust = TRUE
+  }
 
   return(vr)
 }
