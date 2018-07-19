@@ -172,6 +172,7 @@ stopifnot(requireNamespace("VariantAnnotation",quietly = T))
 
 
 if (opt$verbose){
+  library(VariantAnnotation)
   library(clustMut)
   library(genomicHelpersDMP)
   library(magrittr)
@@ -180,11 +181,13 @@ if (opt$verbose){
     library(parallel)
   }
 } else {
-  library(clustMut)
-  library(genomicHelpersDMP)
-  library(magrittr)
+  suppressPackageStartupMessages(library(VariantAnnotation))
+  suppressPackageStartupMessages(library(clustMut))
+  suppressPackageStartupMessages(library(genomicHelpersDMP))
+  suppressPackageStartupMessages(library(magrittr))
   if (!is.null(opt$cores)){
     stopifnot(requireNamespace("parallel",quietly = T))
+    suppressPackageStartupMessages(library(parallel))
   }
 }
 
