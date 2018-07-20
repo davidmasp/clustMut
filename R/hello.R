@@ -127,7 +127,9 @@ unlist_GR_base_list <- function(x){
 
 VR_preprocessing <- function(file_paths,pair_set,alignability_mask){
   # read the filter
-  alignability_bed = rtracklayer::import.bed(alignability_mask)
+  if (!is.null(alignability_mask)){
+    alignability_bed = rtracklayer::import.bed(alignability_mask)
+  }
   library(progress)
   pb <- progress_bar$new(
     format = "Reading files :percent eta: :eta",
