@@ -125,11 +125,16 @@ unlist_GR_base_list <- function(x){
 
 
 
-VR_preprocessing <- function(file_paths,pair_set,alignability_mask){
+VR_preprocessing <- function(file_paths,
+                             pair_set,
+                             alignability_mask){
   # read the filter
   if (!is.null(alignability_mask)){
     alignability_bed = rtracklayer::import.bed(alignability_mask)
+    sq_st = seqlevelsStyle(alignability_bed)
   }
+
+
   library(progress)
   pb <- progress_bar$new(
     format = "Reading files :percent eta: :eta",
@@ -137,9 +142,6 @@ VR_preprocessing <- function(file_paths,pair_set,alignability_mask){
 
   dat_list = purrr::map(file_paths,function(x){
 
-
-    suppressPackageStartupMessages(library(VariantAnnotation))
-    # needed eventually I guess
     dat = readRDS(x)
     original = length(dat)
 
@@ -159,11 +161,12 @@ VR_preprocessing <- function(file_paths,pair_set,alignability_mask){
 
     # I check if alignability filter is set
     if (!is.null(alignability_mask)){
-      seqlevelsStyle(dat) <- "UCSC" # this is specific for my file, maybe should generalize (see issue #33)
+      stopifnot(sq_st == seqlevelsStyle(dat))
+      # remove chromosomes out of the bed file
+      dat = dat[seqnames(dat) %in% seqnames(alignability_bed)]
       ovr = GenomicRanges::findOverlaps(query = dat,subject = alignability_bed)
       # we keep the mutations that are included in the bed file !!!
       dat = dat[S4Vectors::queryHits(ovr),]
-      seqlevelsStyle(dat) <- "NCBI"
     }
 
     after_filter = length(dat)
