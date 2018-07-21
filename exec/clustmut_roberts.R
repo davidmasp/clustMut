@@ -153,13 +153,13 @@ if (interactive()){
   opt$data= "~/data/TCGA_MUTS/TCGA_VR/BLCA/"
   opt$glob = "*_VR.rds"
   opt$recursive = TRUE
-  opt$alignability_mask = "~/data/CRG_alignability/hg19/LEGACY/crg36AlignExtNoBlackRmvsh19_RngMask_savedInt=TRUE.bed"
+  opt$alignability_mask = "~/data/CRG_alignability/hg19_ncbi/alignability_mask.bed"
 
   opt$keepMSM = TRUE
   opt$keepVR = TRUE
   opt$mutlist = TRUE
   opt$keep_uncl = TRUE
-  opt$cores = 20
+  opt$cores = 5
 }
 
 
@@ -181,10 +181,14 @@ if (!opt$use_dbSNP){
 if (opt$cores == 1 | is.null(opt$cores)){
   library(progress)
   pb <- progress_bar$new(
-    format = "Computing clusters by Roberts method :percent eta: :eta",
+    format = "Computing clusters by Roberts method, :sample ,  :percent eta: :eta",
     total = length(file_paths), clear = FALSE)
 
+
+
   vr_res = purrr::map(dat,function(vr){
+
+    pb$tick(tokens = list(sample = unique(sampleNames(vr))))
     vr_res = clustMut::roberts_clusters(
       vr = vr,
       delta = opt$delta,
@@ -194,7 +198,7 @@ if (opt$cores == 1 | is.null(opt$cores)){
       dbSNP = dbSNP
     )
 
-    pb$tick()
+
     return(vr_res)
   })
 
@@ -238,7 +242,7 @@ print("Print Output")
 
 # save the VR object
 
-seqlevelsStyle(vr_res) <- "UCSC"
+#seqlevelsStyle(vr_res) <- "UCSC"
 
 if (opt$keepVR){
   saveRDS(object = vr_res,
