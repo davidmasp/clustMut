@@ -221,7 +221,6 @@ print("Print Output")
 
 # save the VR object
 
-seqlevelsStyle(vr_res) <- "UCSC"
 
 if (opt$keepVR){
   saveRDS(object = vr_res,
