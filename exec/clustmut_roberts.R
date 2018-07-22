@@ -77,7 +77,7 @@ option_list = list(
   ),
   make_option(
     c("-S", "--use_dbSNP"),
-    action = "store_true",default = TRUE,
+    action = "store_true",default = FALSE,
     help = "Wheter or not to use dbSNP"
   ),
   make_option(
@@ -133,6 +133,7 @@ stopifnot(requireNamespace("VariantAnnotation",quietly = T))
 
 if (opt$verbose){
   library(clustMut)
+  library(VariantAnnotation)
   library(genomicHelpersDMP)
   library(magrittr)
   if (!is.null(opt$cores)){
@@ -141,6 +142,7 @@ if (opt$verbose){
   }
 } else {
   library(clustMut)
+  library(VariantAnnotation)
   library(genomicHelpersDMP)
   library(magrittr)
   if (!is.null(opt$cores)){
@@ -150,7 +152,7 @@ if (opt$verbose){
 
 
 if (interactive()){
-  opt$data= "~/data/TCGA_MUTS/TCGA_VR/BLCA/"
+  opt$data= "~/data/MISC_MUTS/Chan_et_al_NG_2015/VR/"
   opt$glob = "*_VR.rds"
   opt$recursive = TRUE
   opt$alignability_mask = "~/data/CRG_alignability/hg19_ncbi/alignability_mask.bed"
@@ -159,7 +161,8 @@ if (interactive()){
   opt$keepVR = TRUE
   opt$mutlist = TRUE
   opt$keep_uncl = TRUE
-  opt$cores = 5
+  opt$use_dbSNP = FALSE
+  opt$cores = 1
 }
 
 
@@ -173,12 +176,13 @@ dat = VR_preprocessing(file_paths = file_paths,
                              alignability_mask = opt$alignability_mask)
 
 if (!opt$use_dbSNP){
-  stop("not implemented")
+  dbSNP = NULL
 } else {
   dbSNP = SNPlocs.Hsapiens.dbSNP144.GRCh37::SNPlocs.Hsapiens.dbSNP144.GRCh37
 }
 
 if (opt$cores == 1 | is.null(opt$cores)){
+  #browser()
   library(progress)
   pb <- progress_bar$new(
     format = "Computing clusters by Roberts method, :sample ,  :percent eta: :eta",
@@ -187,9 +191,9 @@ if (opt$cores == 1 | is.null(opt$cores)){
 
 
   vr_res = purrr::map(dat,function(vr){
-
+    #browser()
     pb$tick(tokens = list(sample = unique(sampleNames(vr))))
-    vr_res = clustMut::roberts_clusters(
+    vr_res = roberts_clusters(
       vr = vr,
       delta = opt$delta,
       ce_cutoff = 10,

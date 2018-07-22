@@ -40,10 +40,20 @@ roberts_clusters <- function(vr,
   pi = n / (D*G)
 
   # step 2: filter dbSNP
-  vr = roberts_filter_dbSNP(vr,dbSNP = dbSNP)
+  if (!is.null(dbSNP)){
+    vr = roberts_filter_dbSNP(vr,dbSNP = dbSNP)
+  }
+
+  if (length(vr) == 0){
+    warning("No mutations left in sample");
+    return(vr)}
 
   # step 3: Group complex mutations
   vr = roberts_group_ce(vr = vr, ce_cutoff)
+
+  if (length(vr) == 0){
+    warning("No mutations left in sample");
+    return(vr)}
 
   # step 4: Find recursively clusters nd compute pvalues
   # from here on important to not filter the vr! because we will lose the idx pos
