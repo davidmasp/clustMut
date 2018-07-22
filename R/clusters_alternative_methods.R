@@ -96,6 +96,10 @@ roberts_find_clust <- function(vr, delta, p) {
 roberts_group_ce <- function(vr,ce_cutoff,remove = "first"){
   pairs = find_pairs_VR(vr,ce_cutoff)
 
+  if (length(pairs)==0){
+    return(vr)
+  }
+
   ol =length(vr)
 
   if (remove == "first"){
