@@ -116,6 +116,12 @@ option_list = list(
     action = "store_true",
     dest = "unclustkeep",default = FALSE,
     help = "Keep also a unclustered MSM in the object file "
+  ),
+  make_option(
+    c("-R", "--reference_genome"),
+    action = "store",
+    default = "Hsapiens.UCSC.hg19",
+    help = "The genome reference used to compute MSM"
   )
 )
 
@@ -275,13 +281,17 @@ if (opt$keepMSM){
 
   MSM_clust = compute_MSM(vr = selected_muts,
                           k = opt$kmer,
-                          tp = FALSE)
+                          tp = FALSE,
+                          genome = genome_selector(
+                            alias = opt$reference_genome))
 
 
   if (opt$unclustkeep){
     MSM_uncl = compute_MSM(vr = vr_res[! vr_res$roberts_clust ],
                            k = opt$kmer,
-                           tp = FALSE)
+                           tp = FALSE,
+                           genome = genome_selector(
+                             alias = opt$reference_genome))
 
     MSM_uncl = MSM_uncl[rownames(MSM_clust),] #(???)
 

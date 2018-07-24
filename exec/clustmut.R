@@ -151,6 +151,12 @@ option_list = list(
     action = "store_true",
     default = FALSE,
     help = "Compute and output the mutation subtype matrix. [default %default]"
+  ),
+  make_option(
+    c("-R", "--reference_genome"),
+    action = "store",
+    default = "Hsapiens.UCSC.hg19",
+    help = "The genome reference used to compute MSM"
   )
 )
 
@@ -395,13 +401,18 @@ if (opt$keepMSM){
   # this could also be parallelized too.
   MSM_clust = compute_MSM(vr = selected_muts,
                           k = opt$kmer,
-                          tp = opt$true_positive)
+                          tp = opt$true_positive,
+                          genome = genome_selector(
+                            alias = opt$reference_genome))
 
 
   if (opt$unclustkeep){
-    MSM_uncl = compute_MSM(vr = vr_res[vr_res$fdr>=opt$fdr_cutoff | is.na(vr_res$fdr) ],
+    vr_unclust = vr_res[vr_res$fdr>=opt$fdr_cutoff | is.na(vr_res$fdr) ]
+    MSM_uncl = compute_MSM(vr = vr_unclust,
                            k = opt$kmer,
-                           tp = opt$true)
+                           tp = opt$true,
+                           genome = genome_selector(
+                             alias = opt$reference_genome) )
 
     MSM_uncl = MSM_uncl[rownames(MSM_clust),]
 
