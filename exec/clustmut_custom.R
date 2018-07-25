@@ -269,8 +269,8 @@ if (opt$keepMSM){
                            tp = FALSE,
                            genome = genome_selector(
                              alias = opt$reference_genome))
-
-    MSM_uncl = MSM_uncl[rownames(MSM_clust),]
+    # see issue #35
+    #MSM_uncl = MSM_uncl[rownames(MSM_clust),]
 
 
     MSM_result = list(clust = MSM_clust,uncl = MSM_uncl)

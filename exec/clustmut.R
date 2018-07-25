@@ -201,19 +201,22 @@ if (opt$verbose){
 
 if (interactive()){
   opt$mode = "distance"
-  opt$data = "Y:/users/dmas/data/TCGA_MUTS/RNDmut/HNSC-BI/"
+  opt$data = "Y:/users/dmas/data/MISC_MUTS/Chan_et_al_NG_2015/RND_out/"
   opt$recursive = TRUE
-  opt$glob = "*randomized.tsv"
+  opt$glob = "*_randomized_w40k.tsv"
 
   opt$keepMSM = T
   opt$mutlist = T
   opt$keepVR = T
+  opt$unclustkeep = TRUE
 
-  opt$nmuts = 4
+  opt$nmuts = 3
   opt$outuput_prefix = glue::glue("clust_{opt$nmuts}")
 
   opt$verbose = T
   opt$true_positive = T
+
+  opt$reference_genome = "Scerevisiae.NIEHS.ySR127"
 }
 
 # opt$mode = "vaf"
@@ -413,10 +416,7 @@ if (opt$keepMSM){
                            tp = opt$true,
                            genome = genome_selector(
                              alias = opt$reference_genome) )
-
-    MSM_uncl = MSM_uncl[rownames(MSM_clust),]
-
-
+    # I output all samples, because it is a list.
     MSM_result = list(clust = MSM_clust,uncl = MSM_uncl)
   } else {
     MSM_result = list(clust = MSM_clust)
