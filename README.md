@@ -1,4 +1,5 @@
-# clustMut
+clustMut <img src="clustmut_logo.png" align="right" />
+========================================================
 
 The goal of clustMut is to call clustered mutations in sets of somatic mutations.
 A clustered mutation is defined as the result of a local _hyper_-mutation event.
