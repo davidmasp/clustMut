@@ -1,4 +1,6 @@
-# clustMut
+clustMut <img src="clustmut_logo.png" align="right" />
+========================================================
+
 
 The goal of clustMut is to ...
 
