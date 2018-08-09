@@ -1,0 +1,14 @@
+image: rocker/rstudio  
+test:
+   script:
+    - git clone http://gitlab-ci-token:${CI_JOB_TOKEN}@fsupeksvr.irbbarcelona.pcb.ub.es/gitlab/dmas/genomicHelpersDMP.git
+    - R CMD INSTALL --no-multiarch genomicHelpersDMP
+    - R -e 'install.packages(c("ggplot2","dplyr","tidyselect","purrr","broom","testhat"))'
+    - R -e 'source("https://bioconductor.org/biocLite.R");biocLite("GenomicRanges")'
+    - R CMD build . --no-build-vignettes --no-manual
+    - PKG_FILE_NAME=$(ls -1t *.tar.gz | head -n 1)
+    - R CMD check "${PKG_FILE_NAME}" --no-build-vignettes --no-manual
+    - R -e 'devtools::test()'
+   tags:
+    - test
+    - build

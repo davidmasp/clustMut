@@ -1,9 +1,6 @@
 clustMut <img src="clustmut_logo.png" align="right" />
 ========================================================
 
-
-The goal of clustMut is to ...
-
 ## Example
 
 This is a basic example which shows you how to solve a common problem:
