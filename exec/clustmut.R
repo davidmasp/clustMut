@@ -275,7 +275,7 @@ if (opt$mode == "distance"){ # if distance -i should be randommut out
 
     vr_res = clust_dist(vr = tmp$VR,
                         rand_df = tmp$RAND,
-                        no_cores = NULL,
+                        no_cores = opt$cores,
                         method = opt$fdr_method,
                         dist_cutoff = opt$dist_cutoff,
                         n = opt$nmuts)
