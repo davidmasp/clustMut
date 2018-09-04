@@ -372,56 +372,5 @@ if (opt$mode == "distance"){ # if distance -i should be randommut out
 }
 
 
-# OUTPUT =======================================================================
-
-print("Print Output")
-
-# save the VR object
-
-if (opt$keepVR){
-  saveRDS(object = vr_res,
-          file = glue::glue("{opt$outuput_prefix}_{opt$mode}_VRanges.rds"))
-}
-
-selected_muts = vr_res[vr_res$fdr<opt$fdr_cutoff & !is.na(vr_res$fdr)]
-
-
-# save a list output
-if (opt$mutlist){
-
-  mutid = paste(seqnames(selected_muts),
-                start(selected_muts),
-                sampleNames(selected_muts),
-                alt(selected_muts),
-                sep = ":")
-
-  readr::write_lines(mutid,path = glue::glue("{opt$outuput_prefix}_{opt$mode}_mutlist.txt"))
-}
-
-
-if (opt$keepMSM){
-  # compute the MSM -> see issue #5
-  # this could also be parallelized too.
-  MSM_clust = compute_MSM(vr = selected_muts,
-                          k = opt$kmer,
-                          tp = opt$true_positive,
-                          genome = genome_selector(
-                            alias = opt$reference_genome))
-
-
-  if (opt$unclustkeep){
-    vr_unclust = vr_res[vr_res$fdr>=opt$fdr_cutoff | is.na(vr_res$fdr) ]
-    MSM_uncl = compute_MSM(vr = vr_unclust,
-                           k = opt$kmer,
-                           tp = opt$true,
-                           genome = genome_selector(
-                             alias = opt$reference_genome) )
-    # I output all samples, because it is a list.
-    MSM_result = list(clust = MSM_clust,uncl = MSM_uncl)
-  } else {
-    MSM_result = list(clust = MSM_clust)
-  }
-
-  saveRDS(object = MSM_result, file = glue::glue("{opt$outuput_prefix}_{opt$mode}_MSM.rds"))
-}
+# output ==============================================================
 
