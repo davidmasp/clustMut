@@ -65,7 +65,7 @@ option_list = list(
   make_option(
     c("-n", "--cores"),
     action = "store",
-    default = 5,
+    default =  NULL,
     type = 'integer',
     help = "Number of cores to parallelize [default %default]"
   ),make_option(
@@ -210,6 +210,8 @@ if (interactive()){
   opt$keepVR = T
   opt$unclustkeep = TRUE
 
+  opt$dist_cutoff = 500
+  opt$fdr_method = "FDR"
   opt$nmuts = 1
   opt$outuput_prefix = glue::glue("clust_{opt$nmuts}")
 

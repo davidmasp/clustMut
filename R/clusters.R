@@ -134,13 +134,15 @@ clust_dist <- function(vr,
     clusterEvalQ(cl = cl, library(clustMut))
     # clusterEvalQ(cl = cl, library(VariantAnnotation))
     # should be solved after issue #26
-    clusterExport(cl = cl,varlist = c("n"),envir=environment())
+    clusterExport(cl = cl,varlist = c("n","method"),envir=environment())
     if (!is.null(dist_cutoff)){
       clusterExport(cl = cl,varlist = c("dist_cutoff"),envir=environment())
     }
+    stop("See issue #45")
     res = parLapply(cl = cl,
               X = input_list,
               fun = function(x){
+               print(method)
                 switch (method,
                   fdr = clust_dist_sample(vr = x$vr,
                                           rand_df = x$RAND,
@@ -324,6 +326,7 @@ write_clust_muts <- function(dat_gr,clust_mask,filename){
 #### FDR ######
 
 clust_dist_sample_FDR <- function(vr,rand_df,ce_cutoff = 1,dist_cutoff,n=1){
+
   stopifnot(requireNamespace("VariantAnnotation",quietly = TRUE))
 
   ######### ONE SAMPLE ASSUMPTION
@@ -358,8 +361,9 @@ clust_dist_sample_FDR <- function(vr,rand_df,ce_cutoff = 1,dist_cutoff,n=1){
   # numeric problem issue #21
   if (is.numeric(n) & n%%1==0){
     n = as.integer(n)
+  } else {
+    stop("N needs to be numeric")
   }
-
 
   if (n == 1 & is.integer(n)){
     gr_dist = GenomicRanges::distanceToNearest(vr)
@@ -384,14 +388,15 @@ clust_dist_sample_FDR <- function(vr,rand_df,ce_cutoff = 1,dist_cutoff,n=1){
     warning(glue::glue("Sample {sample_name} was removed because not enough mutations were found."))
     return(NULL)
   }
-  random_matrix = apply(random_matrix, 2, function(x){x[is.na(x)]})
+
+  random_matrix = apply(random_matrix, 2, function(x){x[!is.na(x)]})
 
   FDR = compute_FDR_basic(pos_distance = mdist,
                           dist_cutoff = dist_cutoff,
                           random_matrix = random_matrix)
 
   vr$FDR = FDR
-  vr$DIST = mean(mdist)
+  vr$TDIST = min(mdist[mdist <= dist_cutoff])
   return(vr)
 }
 
@@ -399,6 +404,20 @@ clust_dist_sample_FDR <- function(vr,rand_df,ce_cutoff = 1,dist_cutoff,n=1){
 
 
 compute_FDR_basic <- function(pos_distance,random_matrix,dist_cutoff){
+  #browser()
+  # check arguments
+  if (is.null(dist_cutoff)){
+    stop("Cutoff not provided")
+  }
+
+  if (is.null(dim(random_matrix)) || nrow(random_matrix) == 0){
+    stop("Error in random matrix when computing FDR")
+  }
+
+  if (is.null(pos_distance) | nrow(random_matrix) != length(pos_distance)){
+    stop("Error in the provided positions")
+  }
+
   observed = sum(pos_distance < dist_cutoff)
   expected = apply(random_matrix, 2, function(x){sum(x < dist_cutoff)})
 
