@@ -201,16 +201,16 @@ if (opt$verbose){
 
 if (interactive()){
   opt$mode = "distance"
-  opt$data = "Y:/users/dmas/data/MISC_MUTS/Chan_et_al_NG_2015/RND_out/"
+  opt$data = "Y:/users/dmas/data/ICGC_MUTS/MELA_AU/splited/"
   opt$recursive = TRUE
-  opt$glob = "*_randomized_w40k.tsv"
+  opt$glob = "*-randomized.tsv"
 
   opt$keepMSM = T
   opt$mutlist = T
   opt$keepVR = T
   opt$unclustkeep = TRUE
 
-  opt$nmuts = 3
+  opt$nmuts = 1
   opt$outuput_prefix = glue::glue("clust_{opt$nmuts}")
 
   opt$verbose = T
@@ -245,7 +245,7 @@ if (opt$mode == "distance"){ # if distance -i should be randommut out
     format = "Distance analysis, :percent done. eta: :eta",
     total = length(file_paths), clear = FALSE)
 
-  vr_res = purrr::map(file_paths,function(x){
+  vr_res = lapply(file_paths,function(x){
 
     dat = suppressMessages(readr::read_tsv(x))
     original = nrow(dat)
@@ -268,7 +268,6 @@ if (opt$mode == "distance"){ # if distance -i should be randommut out
     if (opt$verbose){
       print(glue::glue("{per} mutations discarded in sample {x}."))
     }
-
 
     # analysis ===================
     tmp = parse_randommut_vr(dat)
@@ -373,4 +372,19 @@ if (opt$mode == "distance"){ # if distance -i should be randommut out
 
 
 # output ==============================================================
+
+
+return_output(
+  vr = vr_res,
+  keepVR = opt$keepVR,
+  outuput_prefix = opt$outuput_prefix,
+  mode = opt$mode,
+  fdr_cutoff = opt$fdr_cutoff,
+  mutlist = opt$mutlist,
+  keepMSM = opt$keepMSM,
+  unclustkeep = opt$unclustkeep,
+  kmer = opt$kmer,
+  true_positive = opt$true_positive,
+  reference_genome = opt$reference_genome
+)
 

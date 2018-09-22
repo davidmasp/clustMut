@@ -4,7 +4,7 @@
 
 
 
-return_output.R <- function(vr,
+return_output <- function(vr,
                             keepVR,
                             outuput_prefix,
                             mode,
