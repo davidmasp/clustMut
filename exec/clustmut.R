@@ -238,6 +238,10 @@ file_paths = fs::dir_ls(path,
                         glob = opt$glob,
                         recursive = opt$recursive)
 
+if (length(file_paths) == 0){
+  stop("No files provided.")
+}
+
 if (opt$mode == "distance"){ # if distance -i should be randommut out
   # DISTANCE ===============================================================
   library(progress)
