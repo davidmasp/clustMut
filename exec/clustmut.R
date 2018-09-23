@@ -290,8 +290,9 @@ if (opt$mode == "distance"){ # if distance -i should be randommut out
   names(vr_res) = NULL
   vr_res = do.call("c",vr_res)
   print("ploting files.")
-  plot_exp(vr_res,filename = glue::glue("{opt$outuput_prefix}_plot.pdf"))
-
+  if(opt$fdr_method == "fdr"){
+    plot_exp(vr_res,filename = glue::glue("{opt$outuput_prefix}_plot.pdf"))
+  }
 
   all_samples = length(unique(VariantAnnotation::sampleNames(vr_res)))
   cat("\n")
@@ -381,7 +382,7 @@ if (opt$mode == "distance"){ # if distance -i should be randommut out
 
 
 return_output(
-  vr = vr_res,
+  vr_res = vr_res,
   keepVR = opt$keepVR,
   outuput_prefix = opt$outuput_prefix,
   mode = opt$mode,
@@ -391,6 +392,8 @@ return_output(
   unclustkeep = opt$unclustkeep,
   kmer = opt$kmer,
   true_positive = opt$true_positive,
-  reference_genome = opt$reference_genome
+  reference_genome = opt$reference_genome,
+  fdr_method = opt$fdr_method,
+  dist_cutoff = opt$dist_cutoff
 )
 

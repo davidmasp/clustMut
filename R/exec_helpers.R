@@ -4,17 +4,19 @@
 
 
 
-return_output <- function(vr,
-                            keepVR,
-                            outuput_prefix,
-                            mode,
-                            fdr_cutoff,
-                            mutlist,
-                            keepMSM,
-                            unclustkeep,
-                            kmer,
-                            true_positive,
-                            reference_genome)
+return_output <- function(vr_res,
+                          keepVR,
+                          outuput_prefix,
+                          mode,
+                          fdr_cutoff,
+                          mutlist,
+                          keepMSM,
+                          unclustkeep,
+                          kmer,
+                          true_positive,
+                          reference_genome,
+                          fdr_method,
+                          dist_cutoff)
                             {
   # OUTPUT ==================================================================
 
@@ -27,7 +29,15 @@ return_output <- function(vr,
             file = glue::glue("{outuput_prefix}_{mode}_VRanges.rds"))
   }
 
-  selected_muts = vr_res[vr_res$fdr < fdr_cutoff & !is.na(vr_res$fdr)]
+  if (fdr_method == "fdr"){
+    selected_muts = vr_res[vr_res$fdr < fdr_cutoff & !is.na(vr_res$fdr)]
+  } else if (fdr_method == "FDR"){
+    print(colnames(vr_res))
+    warning("this has not yet been implemented, returning NULL")
+    return(NULL)
+    selected_muts = vr_res[vr_res$fdr < fdr_cutoff & !is.na(vr_res$fdr)]
+  }
+
 
 
   # save a list output
