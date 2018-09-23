@@ -117,7 +117,17 @@ binom_test <- function(x,n,p,...){
 
 
 unlist_GR_base_list <- function(x){
+
   names(x) = NULL
+  ol = length(x)
+
+  # be explicit when removing things.
+  x = purrr::keep(x,~ !is.null(.))
+  if (length(x) < ol){
+    warning("Elements in vr list discarded due to NULL")
+  }
+
+  # mrge elements in the list.
   master_gr = do.call("c",x)
 
   return(master_gr)

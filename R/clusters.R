@@ -84,6 +84,10 @@ compute_fdr_basic <- function(pos_distance,random_matrix){
   pos_distance = pos_distance + 1
   random_matrix = random_matrix + 1
 
+  if (is.list(random_matrix)){
+    stop("wrong random matrix inputed, why? line 88 clusters.R")
+  }
+
   fdr_matrix = apply(random_matrix,2,function(y){
     compute_densityfdr(obs = log(pos_distance),
                        null = log(y),
@@ -245,6 +249,10 @@ clust_dist_sample <- function(vr,rand_df,ce_cutoff = 1,n = 1){
   vr <- vr[na_mask]
   random_matrix = apply(random_matrix, 2, function(x){x[!is.na(x)]})
 
+  if(is.null(dim(random_matrix))){
+    warning(glue::glue("Sample {unique(sampleNames(vr))} discarded due to no vallid mutations."))
+    return(NULL)
+  }
   fdr = compute_fdr_basic(pos_distance = mdist,
                           random_matrix = random_matrix)
 
