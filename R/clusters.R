@@ -11,8 +11,6 @@
 plot_exp <- function(vr,filename = "expected_distances.pdf"){
   pdf(file = filename,paper = "a4r")
 
-  if ("FDR" %in% colnames(x)){return(NULL)}
-
   vr %>% base::split(VariantAnnotation::sampleNames(.)) %>%
     purrr::walk(function(x){
 
