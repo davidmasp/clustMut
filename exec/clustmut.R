@@ -277,7 +277,7 @@ if (opt$mode == "distance"){ # if distance -i should be randommut out
 
     # analysis ===================
     tmp = parse_randommut_vr(dat)
-
+    print(length(tmp$VR))
     vr_res = clust_dist(vr = tmp$VR,
                         rand_df = tmp$RAND,
                         no_cores = opt$cores,
@@ -302,7 +302,7 @@ if (opt$mode == "distance"){ # if distance -i should be randommut out
 
 } else if (opt$mode == "vaf") { # read rds VR files
   # VAF ====================================================================
-  dat = dat = VR_preprocessing(file_paths = file_paths,
+  dat = VR_preprocessing(file_paths = file_paths,
                                pair_set = opt$pair_set,
                                alignability_mask = opt$alignability_mask
   )
