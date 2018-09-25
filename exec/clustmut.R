@@ -289,8 +289,9 @@ if (opt$mode == "distance"){ # if distance -i should be randommut out
   })
   names(vr_res) = NULL
   vr_res = do.call("c",vr_res)
-  print("ploting files.")
+
   if(opt$fdr_method == "fdr"){
+    print("ploting files.")
     plot_exp(vr_res,filename = glue::glue("{opt$outuput_prefix}_plot.pdf"))
   }
 

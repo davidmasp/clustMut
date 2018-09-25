@@ -16,8 +16,7 @@ return_output <- function(vr_res,
                           true_positive,
                           reference_genome,
                           fdr_method,
-                          dist_cutoff)
-                            {
+                          dist_cutoff){
   # OUTPUT ==================================================================
 
   print("Print Output")
