@@ -23,7 +23,7 @@
 
 
 
-Rscript exec/clustmut.R -i data/ \
+Rscript ../exec/clustmut.R -i data/ \
                 --glob "*.tsv" \
                 --recursive \
                 --mode distance \
