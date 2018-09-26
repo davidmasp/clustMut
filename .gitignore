@@ -13,16 +13,12 @@ sandbox_vaf.*
 *.png
 *.pdf
 
-output
-
-wf
-
-benchmark
-
-*.rds
-
+# folders
+00_LEGACY
 doc
 
+# data
+*.rds
 *.txt
 
 
