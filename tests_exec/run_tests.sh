@@ -8,10 +8,13 @@ if hash sbatch 2>/dev/null; then
 
     sbatch --wait clean.sh
 
-    sbatch run_test_lfdr.sh 
-    sbatch --wait run_test_sFDR.sh
+    ID1=$(sbatch --parsable run_test_lfdr.sh)
+    ID2=$(sbatch --parsable run_test_sFDR.sh)
 
-    srun --job-name "test_check" --output=".slurm_%j.out" Rscript check_output_status.R
+    srun --job-name "test_check" \
+        --output=".slurm_%j.out" \
+        --dependency=afterany:$ID1:$ID2 \
+        Rscript check_output_status.R
     EXIT_STATUS=$?
 
 else
@@ -25,7 +28,7 @@ else
     EXIT_STATUS=$?
 fi
 
-
+afterany:
 
 if [ $EXIT_STATUS -ne 0 ]; then
     echo "Error in tests"
