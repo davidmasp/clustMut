@@ -11,8 +11,6 @@
 plot_exp <- function(vr,filename = "expected_distances.pdf"){
   pdf(file = filename,paper = "a4r")
 
-  if ("FDR" %in% colnames(x)){return(NULL)}
-
   vr %>% base::split(VariantAnnotation::sampleNames(.)) %>%
     purrr::walk(function(x){
 
@@ -329,10 +327,6 @@ write_clust_muts <- function(dat_gr,clust_mask,filename){
 }
 
 
-
-
-
-
 #### FDR ######
 
 clust_dist_sample_FDR <- function(vr,rand_df,ce_cutoff = 1,dist_cutoff,n=1){
@@ -398,23 +392,18 @@ clust_dist_sample_FDR <- function(vr,rand_df,ce_cutoff = 1,dist_cutoff,n=1){
     warning(glue::glue("Sample {sample_name} was removed because not enough mutations were found."))
     return(NULL)
   }
-
   random_matrix = apply(random_matrix, 2, function(x){x[!is.na(x)]})
 
   FDR = compute_FDR_basic(pos_distance = mdist,
                           dist_cutoff = dist_cutoff,
                           random_matrix = random_matrix)
-
+  print(FDR)
   vr$FDR = FDR
-  vr$TDIST = min(mdist[mdist <= dist_cutoff])
+  vr$TDIST = max(mdist[mdist <= dist_cutoff])
   return(vr)
 }
 
-
-
-
 compute_FDR_basic <- function(pos_distance,random_matrix,dist_cutoff){
-  #browser()
   # check arguments
   if (is.null(dist_cutoff)){
     stop("Cutoff not provided")

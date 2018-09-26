@@ -277,7 +277,7 @@ if (opt$mode == "distance"){ # if distance -i should be randommut out
 
     # analysis ===================
     tmp = parse_randommut_vr(dat)
-
+    print(length(tmp$VR))
     vr_res = clust_dist(vr = tmp$VR,
                         rand_df = tmp$RAND,
                         no_cores = opt$cores,
@@ -289,8 +289,9 @@ if (opt$mode == "distance"){ # if distance -i should be randommut out
   })
   names(vr_res) = NULL
   vr_res = do.call("c",vr_res)
-  print("ploting files.")
+
   if(opt$fdr_method == "fdr"){
+    print("ploting files.")
     plot_exp(vr_res,filename = glue::glue("{opt$outuput_prefix}_plot.pdf"))
   }
 
@@ -301,7 +302,7 @@ if (opt$mode == "distance"){ # if distance -i should be randommut out
 
 } else if (opt$mode == "vaf") { # read rds VR files
   # VAF ====================================================================
-  dat = dat = VR_preprocessing(file_paths = file_paths,
+  dat = VR_preprocessing(file_paths = file_paths,
                                pair_set = opt$pair_set,
                                alignability_mask = opt$alignability_mask
   )
