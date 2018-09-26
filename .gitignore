@@ -16,7 +16,7 @@ sandbox_vaf.*
 # folders
 00_LEGACY
 doc
-tests/data
+tests_exec/data
 
 # data
 *.rds
