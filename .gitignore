@@ -22,4 +22,6 @@ tests_exec/data
 *.rds
 *.txt
 
+#slurm output
+tests_exec/.slurm_*.out
 
