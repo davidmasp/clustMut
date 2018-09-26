@@ -25,3 +25,5 @@ tests_exec/data
 #slurm output
 tests_exec/.slurm_*.out
 
+# test files
+.chcksum_*.txt

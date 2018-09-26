@@ -11,7 +11,7 @@ if hash sbatch 2>/dev/null; then
     sbatch run_test_lfdr.sh 
     sbatch --wait run_test_sFDR.sh
 
-    srun --job-name "test_check" Rscript check_output_status.R
+    srun --job-name "test_check" --output=".slurm_%j.out" Rscript check_output_status.R
     EXIT_STATUS=$?
 
 else
