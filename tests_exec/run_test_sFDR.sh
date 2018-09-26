@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 #
-#SBATCH --job-name=cluster_call
+#SBATCH --job-name=TEST_clustmut
 
 #SBATCH --output=.slurm_%j.out
 
