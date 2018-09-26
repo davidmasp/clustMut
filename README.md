@@ -6,9 +6,9 @@ A clustered mutation is defined as the result of a local _hyper_-mutation event.
 
 This package uses XXX different statistics to compute and detect those events.
 
-* Chromosomic distance - Need a randomized version of the sample that you can generate using randommut.
+* Chromosomic distance - Need a randomized version of the sample that you can generate using [randommut](http://fsupeksvr.irbbarcelona.pcb.ub.es/gitlab/dmas/randommut).
 * Allele Frequency
-* Edit distance beteen mutations
+* Edit distance between mutations
 
 ## Installation
 
@@ -19,6 +19,8 @@ Install the package using:
 ```
 
 Then, move the script to run to your `bin` or to a folder available in your `$PATH`.
+This is a one time only action, when you update your package the new version will be available from the same script.
+
 
 ```bash
 cp clustmut_run.sh ~/bin/
@@ -29,6 +31,10 @@ and give it execution permisions.
 ```bash
 chmod +x script.sh
 ```
+
+### Dependencies
+
+R packages should be installed when instaling the package. No other packages are needed for the package. Bash and UNIX is required to run the shell script. 
 
 ## Usage
 
