@@ -9,9 +9,9 @@ if hash sbatch 2>/dev/null; then
     sbatch --wait clean.sh
 
     sbatch run_test_lfdr.sh 
-    sbatch run_test_sFDR.sh
+    sbatch --wait run_test_sFDR.sh
 
-    srun --jobname "test_check" Rscript check_output_status.R
+    srun --job-name "test_check" Rscript check_output_status.R
 
 else
     echo "Running exec test of clustmut in local mode"
