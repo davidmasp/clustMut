@@ -10,7 +10,7 @@
 
 #SBATCH --time=00:30:00
 
-#SBATCH --mem=400
+#SBATCH --mem=10000
 
 Rscript ../exec/clustmut.R -i data/ \
                 --glob "*.tsv" \
