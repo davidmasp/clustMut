@@ -11,7 +11,7 @@ if hash sbatch 2>/dev/null; then
     sbatch run_test_lfdr.sh 
     sbatch run_test_sFDR.sh
 
-    sbatch check_output_status.sh
+    srun --jobname "test_check" Rscript check_output_status.R
 
 else
     echo "Running exec test of clustmut in local mode"
@@ -19,7 +19,8 @@ else
     sh clean.sh
     sh run_test_fdr.sh
     sh run_test_FDR.sh
-    sh check_output_status.sh
+    
+    srun --jobname "test_check" Rscript check_output_status.R
 fi
 
 
