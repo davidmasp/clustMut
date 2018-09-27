@@ -12,10 +12,9 @@
 
 #SBATCH --mem=10000
 
-Rscript ../exec/clustmut.R -i data/ \
+Rscript ../exec/clustmut_distance.R -i data/ \
                 --glob "*.tsv" \
                 --recursive \
-                --mode distance \
                 -o mela_au_sFDR_500 \
                 -N 1 \
                 --fdr_method "FDR" \
