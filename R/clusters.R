@@ -397,7 +397,6 @@ clust_dist_sample_FDR <- function(vr,rand_df,ce_cutoff = 1,dist_cutoff,n=1){
   FDR = compute_FDR_basic(pos_distance = mdist,
                           dist_cutoff = dist_cutoff,
                           random_matrix = random_matrix)
-  print(FDR)
   vr$FDR = FDR
   vr$TDIST = max(mdist[mdist <= dist_cutoff])
   return(vr)
