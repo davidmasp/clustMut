@@ -175,6 +175,7 @@ deps = c("genomicHelpersDMP",
          "ggplot2",
          "viridis",
          "VariantAnnotation",
+         "parallel",
          "glue")
 
 stopifnot(requireNamespace("clustMut",quietly = T))
