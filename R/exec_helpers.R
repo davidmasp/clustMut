@@ -2,8 +2,28 @@
 # Functions that should go in the executable files.
 # Output, pruning etc.
 
+# THIS SHOULD NOT BE EXPORTED! ISSUE
 
-#' function of code
+
+
+#' Check dependencies
+#'
+#' @param deps character vector with package names
+#'
+#' @return
+#' @export
+#'
+#' @examples
+clustmut_internal_check_dependencies <- function(deps) {
+  for (i in deps){
+    if (!requireNamespace(i,quietly = T)){
+      cat(paste("Dependency",i,"is missing in the installation"))
+    }
+  }
+}
+
+
+#' Return version of code
 #'
 #' @param version TRUE if you want to return the version of the code
 #' @param quit TRUE if quitting after the version has been rinted in the CLI
@@ -12,7 +32,7 @@
 #' @export
 #'
 #' @examples
-return_version <- function(version,quit){
+clustmut_internal_return_version <- function(version,quit){
   if (version){
     cat(cli::rule(center = "ClustMut"))
     cat("\n")
@@ -30,7 +50,7 @@ return_version <- function(version,quit){
 }
 
 
-return_output <- function(vr_res,
+clustmut_internal_return_output <- function(vr_res,
                           keepVR,
                           outuput_prefix,
                           mode,

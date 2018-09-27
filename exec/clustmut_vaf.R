@@ -177,14 +177,11 @@ deps = c("clustMut",
          "VariantAnnotation",
          "glue")
 
-for (i in deps){
-  if (!requireNamespace("clustMut",quietly = T)){
-    cat(paste("Dependency",i,"is missing in the installation"))
-  }
-}
+stopifnot(requireNamespace("clustMut",quietly = T))
+clustMut::clustmut_internal_check_dependencies(deps)
 
 # print version ===============================================================
-clustMut::return_version(version = (opt$verbose | opt$version),
+clustMut::clustmut_internal_return_version(version = (opt$verbose | opt$version),
                quit = opt$version)
 
 # load packages ===============================================================
@@ -242,147 +239,40 @@ if (length(file_paths) == 0){
   stop("No files provided.")
 }
 
-if (opt$mode == "distance"){ # if distance -i should be randommut out
-  # DISTANCE ===============================================================
 
-  # first we iterate over each file to compute the FDR, this means
-  # that it is not possible to handle a sample which is divided
-  # in 2 files. (CAVEAT)
-  vr_res = lapply(file_paths,function(x){
-    dat = suppressMessages(readr::read_tsv(x))
-    original = nrow(dat)
+# VAF ====================================================================
+dat = VR_preprocessing(file_paths = file_paths,
+                             pair_set = opt$pair_set,
+                             alignability_mask = opt$alignability_mask
+)
 
-    # apparently this happens in ICGC
-    mask = (dat$ref == dat$alt)
-    dat = dat[!mask,]
-
-    # check for duplicates
-    dat %<>% dplyr::distinct(chr,start,sample,alt,.keep_all=TRUE)
-
-    # remove NNN and outside set
-    ref_in = genomicHelpersDMP::dna_codes[[opt$pair_set]]
-    mask=dat$ref %in% ref_in
-
-    dat = dat[mask,]
-
-    after_filter = nrow(dat)
-    per = (1 - (after_filter/original)) %>% scales::percent()
-    if (opt$verbose){
-      print(glue::glue("{per} mutations discarded in sample {x}."))
-    }
-
-    # analysis ===================
-    tmp = parse_randommut_vr(dat)
-    print(length(tmp$VR))
-    vr_res = clust_dist(vr = tmp$VR,
-                        rand_df = tmp$RAND,
-                        no_cores = opt$cores,
-                        method = opt$fdr_method,
-                        dist_cutoff = opt$dist_cutoff,
-                        n = opt$nmuts)
-
-    return(vr_res)
-  })
-  names(vr_res) = NULL
-  vr_res = do.call("c",vr_res)
-
-  if(opt$fdr_method == "fdr"){
-    print("ploting files.")
-    plot_exp(vr_res,filename = glue::glue("{opt$outuput_prefix}_plot.pdf"))
-  } else if (opt$fdr_method == "FDR"){
-    print("ploting for FDR not implemented yet")
-  }
-
-  if (opt$verbose){
-    all_samples = length(unique(VariantAnnotation::sampleNames(vr_res)))
-    cat("\n")
-    cat(cli::boxx(glue::glue("Number of samples detected: {all_samples}")))
-    cat("\n")
-  }
-
-} else if (opt$mode == "vaf") { # read rds VR files
-  # VAF ====================================================================
-  dat = VR_preprocessing(file_paths = file_paths,
-                               pair_set = opt$pair_set,
-                               alignability_mask = opt$alignability_mask
-  )
-
-  # analysis ===================
-  # This could be parallelized
-  pb <- progress_bar$new(
-    format = "Computing VAF fdr :percent eta: :eta",
-    total = length(file_paths), clear = FALSE)
+# analysis ===================
+# This could be parallelized
+pb <- progress_bar$new(
+  format = "Computing VAF fdr :percent eta: :eta",
+  total = length(file_paths), clear = FALSE)
 
 
-  vr_res = purrr::map(dat,function(vr){
-    vr_res = clustMut::local_vaflr_fdr(vr = vr,
-                                       simulation_size_input =
-                                       opt$simulation_size_input,
-                                       pairs_size = opt$pairs_size)
+vr_res = purrr::map(dat,function(vr){
+  vr_res = clustMut::local_vaflr_fdr(vr = vr,
+                                     simulation_size_input =
+                                     opt$simulation_size_input,
+                                     pairs_size = opt$pairs_size)
 
-    pb$tick()
-    return(vr_res)
-  })
+  pb$tick()
+  return(vr_res)
+})
 
-  names(vr_res) = NULL
-  vr_res <- do.call(what = "c", args = vr_res)
-  all_samples = length(unique(VariantAnnotation::sampleNames(vr_res)))
-  cli::boxx(glue::glue("Number of samples detected: {all_samples}"))
-
-
-
-
-} else if (opt$mode == "edit"){
-  # EDIT ===================================================================
-
-  # read rds VR file
-  dat = VR_preprocessing(file_paths = file_paths,
-                         pair_set = opt$pair_set,
-                         alignability_mask = opt$alignability_mask
-                         )
-
-  # # analysis EDIT ===================
-  # # This could be parallelized
-  # pb <- progress_bar$new(
-  #   format = "Computing Edit distance fdr :percent eta: :eta",
-  #   total = length(file_paths), clear = FALSE)
-
-
-  # Initiate cluster
-  print("Running a parallelized version of the edit dist.")
-  library(parallel)
-  cl <- makeCluster(opt$cores)
-  clusterEvalQ(cl = cl,library("clustMut"))
-  clusterEvalQ(cl = cl,library("genomicHelpersDMP"))
-  clusterExport(cl = cl,varlist = c("opt"),envir=environment())
-
-  vr_res = parLapply(cl = cl,X = dat,fun = function(vr){
-
-    genome = genome_selector()
-    vr_res = edit_distance_fdr(vr = vr,
-                               k = 4,
-                               genome = genome,
-                               pairs_size = opt$pairs_size,
-                               simulation_size = opt$simulation_size_input )
-    #pb$tick()
-    return(vr_res)
-  })
-
-  stopCluster(cl)
-
-  names(vr_res) = NULL
-  vr_res <- do.call(what = "c", args = vr_res)
-  all_samples = length(unique(VariantAnnotation::sampleNames(vr_res)))
-  cli::boxx(glue::glue("Number of samples detected: {all_samples}"))
-} else {
-  stop("Method not implemented")
-}
+names(vr_res) = NULL
+vr_res <- do.call(what = "c", args = vr_res)
+all_samples = length(unique(VariantAnnotation::sampleNames(vr_res)))
+cli::boxx(glue::glue("Number of samples detected: {all_samples}"))
 
 
 # output ==============================================================
 
 
-return_output(
+clustmut_internal_return_output(
   vr_res = vr_res,
   keepVR = opt$keepVR,
   outuput_prefix = opt$outuput_prefix,
