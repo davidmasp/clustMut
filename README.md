@@ -12,10 +12,15 @@ This package uses XXX different statistics to compute and detect those events.
 
 ## Installation
 
-Install the package using:
+Install the package using the following command. Note that is needed to install genomicHelpersDMP manually from its repository [here](http://fsupeksvr.irbbarcelona.pcb.ub.es/gitlab/dmas/genomicHelpersDMP)
 
 ```bash
-...
+install.packages(c("devtools","getPass"))
+devtools::install_git(
+  "http://fsupeksvr.irbbarcelona.pcb.ub.es/gitlab/dmas/clustMut.git", 
+  credentials = git2r::cred_user_pass("dmas", getPass::getPass()),
+  branch = "dev"
+)
 ```
 
 Then, move the script to run to your `bin` or to a folder available in your `$PATH`.
