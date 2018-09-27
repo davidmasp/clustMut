@@ -3,6 +3,23 @@
 # Output, pruning etc.
 
 
+return_version <- function(version,quit){
+  if (version){
+    cat(cli::rule(center = "ClustMut"))
+    cat("\n")
+    cat(cli::boxx(c(glue::glue("clustmut version: {packageVersion('clustMut')}"),
+                    "DMP: david.mas@irbbarcelona.org"),
+                  padding = 1, align = "center"))
+    cat("\n")
+    if (quit){
+      stop("Quitting...")
+    }
+
+  } else{
+    return(NULL)
+  }
+}
+
 
 return_output <- function(vr_res,
                           keepVR,

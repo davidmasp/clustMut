@@ -1,20 +1,19 @@
-
+# CLUSTMUT
 
 stopifnot(requireNamespace("optparse",quietly = T))
 stopifnot(requireNamespace("cli",quietly = T))
 stopifnot(requireNamespace("clustMut",quietly = T))
 
-
-cat(cli::rule(center = "ClustMut"))
-cat("\n")
-cat(cli::boxx(c(glue::glue("clustmut version: {packageVersion('clustMut')}"),
-            "DMP: david.mas@irbbarcelona.org"),
-          padding = 1, align = "center"))
-cat("\n")
 # optparse =====================================================================
 suppressPackageStartupMessages(require(optparse))
 
 option_list = list(
+  make_option(
+    c("--version"),
+    action = "store_true",
+    default = FALSE,
+    help = "Print version of the package and quit"
+  ),
   make_option(
     c("-i", "--data"),
     action = "store",
@@ -167,6 +166,12 @@ if (opt$verbose) {
   message(print(opt))
 }
 
+
+# print version ===============================================================
+
+return_version(version = (opt$verbose | opt$version),
+               quit = opt$version)
+
 # check dependencies ===========================================================
 stopifnot(requireNamespace("clustMut",quietly = T))
 stopifnot(requireNamespace("genomicHelpersDMP",quietly = T))
@@ -178,7 +183,7 @@ stopifnot(requireNamespace("VariantAnnotation",quietly = T))
 
 
 if (opt$verbose){
-  library(VariantAnnotation)
+  suppressPackageStartupMessages(library(VariantAnnotation))
   library(clustMut)
   library(genomicHelpersDMP)
   library(magrittr)
@@ -201,12 +206,12 @@ if (opt$verbose){
 
 if (interactive()){
   opt$mode = "distance"
-  opt$data = "Y:/users/dmas/data/ICGC_MUTS/MELA_AU/splited/"
+  opt$data = "tests_exec/data/"
   opt$recursive = TRUE
-  opt$glob = "*-randomized.tsv"
+  opt$glob = "*.tsv"
 
-  opt$keepMSM = T
-  opt$mutlist = T
+  opt$keepMSM = F
+  opt$mutlist = F
   opt$keepVR = T
   opt$unclustkeep = TRUE
 
@@ -216,22 +221,8 @@ if (interactive()){
   opt$outuput_prefix = glue::glue("clust_{opt$nmuts}")
 
   opt$verbose = T
-  opt$true_positive = T
-
   opt$reference_genome = "Scerevisiae.NIEHS.ySR127"
 }
-
-# opt$mode = "vaf"
-# opt$data = "E:/local-data/TCGA_MUTS/TCGA_VR/"
-# opt$glob = "*_VR.rds"
-# opt$recursive = TRUE
-#  opt$alignability_mask = "E:/local-data/CRG_alignability/hg19/LEGACY/crg36AlignExtNoBlackRmvsh19_RngMask_savedInt=TRUE.bed"
-
-# opt$mode = "edit"
-# opt$data = "E:/local-data/TCGA_MUTS/TCGA_VR/"
-# opt$glob = "*_VR.rds"
-# opt$recursive = TRUE
-#  opt$alignability_mask = "E:/local-data/CRG_alignability/hg19/LEGACY/crg36AlignExtNoBlackRmvsh19_RngMask_savedInt=TRUE.bed"
 
 # MAIN ========================
 
@@ -240,19 +231,18 @@ file_paths = fs::dir_ls(path,
                         glob = opt$glob,
                         recursive = opt$recursive)
 
+# check if files are available and exists
 if (length(file_paths) == 0){
   stop("No files provided.")
 }
 
 if (opt$mode == "distance"){ # if distance -i should be randommut out
   # DISTANCE ===============================================================
-  library(progress)
-  pb <- progress_bar$new(
-    format = "Distance analysis, :percent done. eta: :eta",
-    total = length(file_paths), clear = FALSE)
 
+  # first we iterate over each file to compute the FDR, this means
+  # that it is not possible to handle a sample which is divided
+  # in 2 files. (CAVEAT)
   vr_res = lapply(file_paths,function(x){
-
     dat = suppressMessages(readr::read_tsv(x))
     original = nrow(dat)
 
@@ -284,7 +274,7 @@ if (opt$mode == "distance"){ # if distance -i should be randommut out
                         method = opt$fdr_method,
                         dist_cutoff = opt$dist_cutoff,
                         n = opt$nmuts)
-    pb$tick()
+
     return(vr_res)
   })
   names(vr_res) = NULL
@@ -293,12 +283,16 @@ if (opt$mode == "distance"){ # if distance -i should be randommut out
   if(opt$fdr_method == "fdr"){
     print("ploting files.")
     plot_exp(vr_res,filename = glue::glue("{opt$outuput_prefix}_plot.pdf"))
+  } else if (opt$fdr_method == "FDR"){
+    print("ploting for FDR not implemented yet")
   }
 
-  all_samples = length(unique(VariantAnnotation::sampleNames(vr_res)))
-  cat("\n")
-  cat(cli::boxx(glue::glue("Number of samples detected: {all_samples}")))
-  cat("\n")
+  if (opt$verbose){
+    all_samples = length(unique(VariantAnnotation::sampleNames(vr_res)))
+    cat("\n")
+    cat(cli::boxx(glue::glue("Number of samples detected: {all_samples}")))
+    cat("\n")
+  }
 
 } else if (opt$mode == "vaf") { # read rds VR files
   # VAF ====================================================================

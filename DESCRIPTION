@@ -29,5 +29,6 @@ Imports:
     readr,
     tidyselect,
     parallel,
-    purrr
+    purrr,
+    cli
 RoxygenNote: 6.0.1
