@@ -28,7 +28,6 @@ else
     EXIT_STATUS=$?
 fi
 
-afterany:
 
 if [ $EXIT_STATUS -ne 0 ]; then
     echo "Error in tests"
