@@ -167,21 +167,27 @@ if (opt$verbose) {
 }
 
 
-# print version ===============================================================
+# check dependencies ===========================================================
+deps = c("clustMut",
+         "genomicHelpersDMP",
+         "magrittr",
+         "readr",
+         "purrr",
+         "ggplot2",
+         "VariantAnnotation",
+         "glue")
 
-return_version(version = (opt$verbose | opt$version),
+for (i in deps){
+  if (!requireNamespace("clustMut",quietly = T)){
+    cat(paste("Dependency",i,"is missing in the installation"))
+  }
+}
+
+# print version ===============================================================
+clustMut::return_version(version = (opt$verbose | opt$version),
                quit = opt$version)
 
-# check dependencies ===========================================================
-stopifnot(requireNamespace("clustMut",quietly = T))
-stopifnot(requireNamespace("genomicHelpersDMP",quietly = T))
-stopifnot(requireNamespace("magrittr",quietly = T))
-stopifnot(requireNamespace("readr",quietly = T))
-stopifnot(requireNamespace("purrr",quietly = T))
-stopifnot(requireNamespace("ggplot2",quietly = T))
-stopifnot(requireNamespace("VariantAnnotation",quietly = T))
-
-
+# load packages ===============================================================
 if (opt$verbose){
   suppressPackageStartupMessages(library(VariantAnnotation))
   library(clustMut)
@@ -202,8 +208,7 @@ if (opt$verbose){
   }
 }
 
-# reading files ================================================================
-
+# interactive debugging options =============================================
 if (interactive()){
   opt$mode = "distance"
   opt$data = "tests_exec/data/"
@@ -225,6 +230,9 @@ if (interactive()){
 }
 
 # MAIN ========================
+
+# reading files ================================================================
+
 
 path = opt$data
 file_paths = fs::dir_ls(path,
