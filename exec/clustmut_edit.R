@@ -184,23 +184,24 @@ clustMut::clustmut_internal_return_version(version = (opt$verbose | opt$version)
                quit = opt$version)
 
 # load packages ===============================================================
+
+libs = c(
+  "VariantAnnotation",
+  "clustMut",
+  "genomicHelpersDMP",
+  "magrittr",
+  "parallel"
+)
+
+stopifnot(all(libs %in% deps))
+
 if (opt$verbose){
-  suppressPackageStartupMessages(library(VariantAnnotation))
-  library(clustMut)
-  library(genomicHelpersDMP)
-  library(magrittr)
-  if (!is.null(opt$cores)){
-    stopifnot(requireNamespace("parallel",quietly = T))
-    library(parallel)
+  for (i in libs){
+    library(i,character.only = TRUE)
   }
 } else {
-  suppressPackageStartupMessages(library(VariantAnnotation))
-  suppressPackageStartupMessages(library(clustMut))
-  suppressPackageStartupMessages(library(genomicHelpersDMP))
-  suppressPackageStartupMessages(library(magrittr))
-  if (!is.null(opt$cores)){
-    stopifnot(requireNamespace("parallel",quietly = T))
-    suppressPackageStartupMessages(library(parallel))
+  for (i in libs){
+    suppressPackageStartupMessages(library(i,character.only = TRUE))
   }
 }
 
