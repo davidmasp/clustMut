@@ -3,6 +3,15 @@
 # Output, pruning etc.
 
 
+#' function of code
+#'
+#' @param version TRUE if you want to return the version of the code
+#' @param quit TRUE if quitting after the version has been rinted in the CLI
+#'
+#' @return NULL
+#' @export
+#'
+#' @examples
 return_version <- function(version,quit){
   if (version){
     cat(cli::rule(center = "ClustMut"))
