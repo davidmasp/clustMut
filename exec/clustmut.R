@@ -232,8 +232,6 @@ if (interactive()){
 # MAIN ========================
 
 # reading files ================================================================
-
-
 path = opt$data
 file_paths = fs::dir_ls(path,
                         glob = opt$glob,
