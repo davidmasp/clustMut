@@ -276,7 +276,6 @@ vr_res = lapply(file_paths,function(x){
   print(length(tmp$VR))
   vr_res = clust_dist(vr = tmp$VR,
                       rand_df = tmp$RAND,
-                      no_cores = opt$cores,
                       method = opt$fdr_method,
                       dist_cutoff = opt$dist_cutoff,
                       n = opt$nmuts)
