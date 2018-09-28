@@ -22,13 +22,6 @@ option_list = list(
     help = "Data folder"
   ),
   make_option(
-    c("-a", "--alignability_mask"),
-    action = "store",
-    type = 'character',
-    help = "(vaf mode) Bed file containing the included regions. Mutations there will be included [default %default]",
-    default = NULL
-  ),
-  make_option(
     c("-s", "--pair_set"),
     action = "store",
     default = "N",
@@ -68,19 +61,6 @@ option_list = list(
     default =  NULL,
     type = 'integer',
     help = "Number of cores to parallelize [default %default]"
-  ),make_option(
-    c("-p", "--pairs_size"),
-    action = "store",
-    default = 10000,
-    type = 'integer',
-    help = "(vaf mode) Window size (in bp) used to find mutation pairs [default %default]"
-  ),
-  make_option(
-    c("-S", "--simulation_size_input"),
-    action = "store",
-    default = 1000,
-    type = 'integer',
-    help = "(vaf mode) Number of max simulations of VAF [default %default]"
   ),
   make_option(
     c("-r", "--recursive"),
@@ -210,7 +190,6 @@ if (opt$verbose){
 
 # interactive debugging options =============================================
 if (interactive()){
-  opt$mode = "distance"
   opt$data = "tests_exec/data/"
   opt$recursive = TRUE
   opt$glob = "*.tsv"
@@ -218,7 +197,7 @@ if (interactive()){
   opt$keepMSM = F
   opt$mutlist = F
   opt$keepVR = T
-  opt$unclustkeep = TRUE
+  opt$unclustkeep = FALSE
 
   opt$dist_cutoff = 500
   opt$fdr_method = "FDR"
@@ -226,8 +205,10 @@ if (interactive()){
   opt$outuput_prefix = glue::glue("clust_{opt$nmuts}")
 
   opt$verbose = T
-  opt$reference_genome = "Scerevisiae.NIEHS.ySR127"
 }
+
+
+print(opt)
 
 # MAIN ========================
 
