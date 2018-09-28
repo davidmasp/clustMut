@@ -9,7 +9,7 @@ suppressPackageStartupMessages(require(optparse))
 
 option_list = list(
   make_option(
-    c("--print_version"),
+    c("-Y","--yawn"),
     action = "store_true",
     default = FALSE,
     help = "Print version of the package and quit",
