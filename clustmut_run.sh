@@ -1,5 +1,25 @@
+#!/usr/bin/env bash
 
-#!/bin/sh
+arr=($*)
+echo "mode ${arr[0]}"
 
-Rscript -e 'source(file = system.file("exec/clustmut.R", package = "clustMut"))' $@
+
+MODE="${arr[0]}" 
+
+unset arr[0]
+
+# join rest of the array
+
+ARGUMENTS=""
+
+for var in "${arr[@]}"
+do
+  ARGUMENTS="$ARGUMENTS ${var}"
+  # do something on $var
+done
+
+echo $ARGUMENTS
+
+
+Rscript -e "source(file = system.file(\"exec/clustmut_$MODE.R\", package = \"clustMut\"))" $ARGUMENTS
 
