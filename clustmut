@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 arr=($*)
-echo "mode ${arr[0]}"
+echo "Clustmut mode selected ${arr[0]}"
 
 
 MODE="${arr[0]}" 
@@ -9,7 +9,6 @@ MODE="${arr[0]}"
 unset arr[0]
 
 # join rest of the array
-
 ARGUMENTS=""
 
 for var in "${arr[@]}"
@@ -18,10 +17,9 @@ do
   # do something on $var
 done
 
-echo $ARGUMENTS
+echo "Arguments sent to clustmut $MODE, $ARGUMENTS"
 
 
 Rscript -e "source(file = system.file(\"exec/clustmut_$MODE.R\", package = \"clustMut\"))" $ARGUMENTS
-
 
 
