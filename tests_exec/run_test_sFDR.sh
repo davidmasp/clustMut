@@ -19,4 +19,4 @@ Rscript ../exec/clustmut_distance.R -i data/ \
                 -N 1 \
                 --fdr_method "FDR" \
                 -d 500 \
-                -Vvu 
+                -Vv
