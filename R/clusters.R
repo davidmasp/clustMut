@@ -100,7 +100,6 @@ compute_fdr_basic <- function(pos_distance,random_matrix){
 
 clust_dist <- function(vr,
                        rand_df,
-                       no_cores = NULL,
                        ce_cutoff=1,
                        method="fdr", # FDR
                        n = 1,
@@ -130,48 +129,18 @@ clust_dist <- function(vr,
     list(vr = vr[x],RAND = rand_df[x,])
   })
   force(n)
-  # prepare the cluster
-  if (!is.null(no_cores)){
-    stopifnot(requireNamespace("parallel",quietly = TRUE))
-    library(parallel)
-    cl = makeCluster(no_cores)
-    clusterEvalQ(cl = cl, library(clustMut))
-    # clusterEvalQ(cl = cl, library(VariantAnnotation))
-    # should be solved after issue #26
-    clusterExport(cl = cl,varlist = c("n","method"),envir=environment())
-    if (!is.null(dist_cutoff)){
-      clusterExport(cl = cl,varlist = c("dist_cutoff"),envir=environment())
-    }
-    stop("See issue #45")
-    res = parLapply(cl = cl,
-              X = input_list,
-              fun = function(x){
-               print(method)
-                switch (method,
-                  fdr = clust_dist_sample(vr = x$vr,
-                                          rand_df = x$RAND,
-                                          n = n),
-                  FDR = clust_dist_sample_FDR(vr = x$vr,
-                                              rand_df = x$RAND,
-                                              dist_cutoff = dist_cutoff,
-                                              n = n)
-                )
-              } )
 
-    parallel::stopCluster(cl)
-  } else {
-    res = lapply(input_list, function(x){
-      switch (method,
-              fdr = clust_dist_sample(vr = x$vr,
-                                      rand_df = x$RAND,
-                                      n = n),
-              FDR = clust_dist_sample_FDR(vr = x$vr,
-                                          rand_df = x$RAND,
-                                          dist_cutoff = dist_cutoff,
-                                          n = n)
-      )
-    })
-  }
+  res = lapply(input_list, function(x){
+    switch (method,
+            fdr = clust_dist_sample(vr = x$vr,
+                                    rand_df = x$RAND,
+                                    n = n),
+            FDR = clust_dist_sample_FDR(vr = x$vr,
+                                        rand_df = x$RAND,
+                                        dist_cutoff = dist_cutoff,
+                                        n = n)
+    )
+  })
 
   definitive = unlist_GR_base_list(res)
   return(definitive)
