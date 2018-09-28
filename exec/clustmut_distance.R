@@ -176,7 +176,8 @@ deps = c("genomicHelpersDMP",
          "viridis",
          "VariantAnnotation",
          "parallel",
-         "glue")
+         "glue",
+         "clustMut")
 
 stopifnot(requireNamespace("clustMut",quietly = T))
 clustMut::clustmut_internal_check_dependencies(deps)
