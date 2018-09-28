@@ -131,7 +131,7 @@ option_list = list(
     c("-d", "--dist_cutoff"),
     action = "store",
     default = NULL,
-    type = 'character',
+    type = "integer",
     help = "Distance cutoff for tail-based FDR [default %default]"
   ),
   make_option(
