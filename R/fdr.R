@@ -46,7 +46,6 @@ compute_densityfdr <- function(obs,
                                null,
                                monotonic=TRUE,
                                alternative = c("left","right")){
-
   stopifnot(requireNamespace("broom",quietly = TRUE))
   require(magrittr)
 
@@ -66,6 +65,8 @@ compute_densityfdr <- function(obs,
   # i compute the local fdr per density estimated point
   fdr = data.frame(x = obs_df$x, y = exp_df$y /obs_df$y )
 
+  # I dont like this y here...
+
   if (monotonic){
     alt = match.arg(alternative)
     fdr$y = switch(alt,
@@ -73,6 +74,7 @@ compute_densityfdr <- function(obs,
                    right = to_monotonic(fdr$y,max=1,ascending = F)
     )
   }
+
   fdr$type = "fdr"
 
   if (any(is.infinite(fdr$y) | is.na(fdr$y))){
@@ -84,6 +86,14 @@ compute_densityfdr <- function(obs,
   combos = abs(outer(obs,fdr$x,"-"))
   # then I get the idx corresponding to the minimum values
   min_ind = apply(combos, 1,function(x){which(x==min(x))})
+
+  # see issue #51 for more details.
+  # as I see it, this happens when a position in obs is equally similar to
+  # 2 positions in the density prediction. why this only happens this
+  # specific time I am unsure
+  if (is.list(min_ind)){
+    min_ind = unlist(lapply(min_ind, sample,size = 1))
+  }
 
   # then I extract the corresponding fdr
   return(fdr[min_ind,]$y)
