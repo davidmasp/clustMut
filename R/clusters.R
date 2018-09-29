@@ -98,6 +98,21 @@ compute_fdr_basic <- function(pos_distance,random_matrix){
 
 
 
+#' Distance mutation clusters
+#'
+#' Detect clusters of mutaion based on the chromosomic distance or IMD.
+#'
+#' @param vr A VRanges object with multiple samples (or just one)
+#' @param rand_df A randommut dataframe with the randomized values
+#' @param ce_cutoff number of nucleotides that are considered to classify complex events
+#' @param method fdr for local (per mutation) and FDR for tail-based (sample - wise) FDR
+#' @param n Number of mutations enclosed in the IMD calculation. N = 1 for pairs of mutations.
+#' @param dist_cutoff (FDR only) distance cutoff
+#'
+#' @return A VR object with an extended metadata column with FDR or fdr values.
+#' @export
+#'
+#' @examples
 clust_dist <- function(vr,
                        rand_df,
                        ce_cutoff=1,
