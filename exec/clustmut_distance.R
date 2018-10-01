@@ -200,7 +200,7 @@ if (interactive()){
   opt$unclustkeep = FALSE
 
   opt$dist_cutoff = 500
-  opt$fdr_method = "FDR"
+  opt$fdr_method = "fdr"
   opt$nmuts = 1
   opt$outuput_prefix = glue::glue("clust_{opt$nmuts}")
 
@@ -254,7 +254,7 @@ vr_res = lapply(file_paths,function(x){
 
   # analysis ===================
   tmp = parse_randommut_vr(dat)
-  print(length(tmp$VR))
+
   vr_res = clust_dist(vr = tmp$VR,
                       rand_df = tmp$RAND,
                       method = opt$fdr_method,
