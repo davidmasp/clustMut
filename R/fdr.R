@@ -77,33 +77,12 @@ compute_densityfdr <- function(obs,
     )
   } else{
     alt = match.arg(alternative)
-    fdr = switch(alt,
-                 left = {
-                   browser()
-                   tail_mask = fdr$x > median(fdr$x)
-                   fdr[tail_mask,"y"] = 1
-
-                   max_mask = fdr$y > 1
-                   fdr[max_mask,] = 1
-
-                   return(fdr)
-                 },
-                 right = {
-                   tail_mask = fdr$x < median(fdr$x)
-                   fdr[tail_mask,"y"] = 1
-
-                   max_mask = fdr$y > 1
-                   fdr[max_mask,] = 1
-
-                   return(fdr)
-                 },
-                 two.tails = {
-
-                   max_mask = fdr$y > 1
-                   fdr[max_mask,] = 1
-
-                   return(fdr)
-                 })
+    fdr = switch(
+      alt,
+      left = median_pruning(fdr,magrittr::is_greater_than),
+      right = median_pruning(fdr,magrittr::is_less_than),
+      two.tails = median_pruning(fdr,NULL)
+    )
   }
 
   fdr$type = "fdr"
@@ -111,8 +90,6 @@ compute_densityfdr <- function(obs,
   if (any(is.infinite(fdr$y) | is.na(fdr$y))){
     fdr[ is.infinite(fdr$y) | is.na(fdr$y) ,]$y = 1 # issue #6
   }
-
-  browser()
 
   # this performs the substraction of the observed values against the
   # x values in the fdr dataset
@@ -131,3 +108,18 @@ compute_densityfdr <- function(obs,
   # then I extract the corresponding fdr
   return(fdr[min_ind,]$y)
 }
+
+median_pruning <- function(fdr,fun){
+
+  if (!is.null(tail)){
+    tail_mask = fun(fdr$x , median(fdr$x))
+    fdr[tail_mask,"y"] = 1
+  }
+
+
+  max_mask = fdr$y > 1
+  fdr[max_mask,]$y = 1
+
+  return(fdr)
+}
+
