@@ -45,7 +45,7 @@ to_monotonic <- function(x,
 compute_densityfdr <- function(obs,
                                null,
                                monotonic=TRUE,
-                               alternative = c("left","right")){
+                               alternative = c("left","right","two.tails")){
   stopifnot(requireNamespace("broom",quietly = TRUE))
   require(magrittr)
 
@@ -67,12 +67,30 @@ compute_densityfdr <- function(obs,
 
   # I dont like this y here...
 
-  if (monotonic){
+  if (monotonic) {
     alt = match.arg(alternative)
-    fdr$y = switch(alt,
-                   left = to_monotonic(fdr$y,max=1,ascending = T),
-                   right = to_monotonic(fdr$y,max=1,ascending = F)
+    fdr$y = switch(
+      alt,
+      left = to_monotonic(fdr$y, max = 1, ascending = T),
+      right = to_monotonic(fdr$y, max = 1, ascending = F),
+      two.tails = {stop("two.tails and monotonic options not compatible")}
     )
+  } else{
+    alt = match.arg(alternative)
+    fdr = switch(alt,
+                 left = {
+                   tail_mask = fdr$x > median(fdr$x)
+                   fdr[tail_mask]$y = 1
+                   return(fdr)
+                 },
+                 right = {
+                   tail_mask = fdr$x < median(fdr$x)
+                   fdr[tail_mask]$y = 1
+                   return(fdr)
+                 },
+                 two.tails = {
+                   return(fdr)
+                 })
   }
 
   fdr$type = "fdr"
