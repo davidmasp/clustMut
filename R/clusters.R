@@ -89,7 +89,8 @@ compute_fdr_basic <- function(pos_distance,random_matrix){
   fdr_matrix = apply(random_matrix,2,function(y){
     compute_densityfdr(obs = log(pos_distance),
                        null = log(y),
-                       alternative="left")
+                       alternative="left",
+                       monotonic = FALSE)
   })
 
   fdr_vec = apply(fdr_matrix,1,median)
@@ -235,6 +236,8 @@ clust_dist_sample <- function(vr,rand_df,ce_cutoff = 1,n = 1){
     warning(glue::glue("Sample {unique(sampleNames(vr))} discarded due to no vallid mutations."))
     return(NULL)
   }
+
+
   fdr = compute_fdr_basic(pos_distance = mdist,
                           random_matrix = random_matrix)
 
