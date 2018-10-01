@@ -79,16 +79,29 @@ compute_densityfdr <- function(obs,
     alt = match.arg(alternative)
     fdr = switch(alt,
                  left = {
+                   browser()
                    tail_mask = fdr$x > median(fdr$x)
-                   fdr[tail_mask]$y = 1
+                   fdr[tail_mask,"y"] = 1
+
+                   max_mask = fdr$y > 1
+                   fdr[max_mask,] = 1
+
                    return(fdr)
                  },
                  right = {
                    tail_mask = fdr$x < median(fdr$x)
-                   fdr[tail_mask]$y = 1
+                   fdr[tail_mask,"y"] = 1
+
+                   max_mask = fdr$y > 1
+                   fdr[max_mask,] = 1
+
                    return(fdr)
                  },
                  two.tails = {
+
+                   max_mask = fdr$y > 1
+                   fdr[max_mask,] = 1
+
                    return(fdr)
                  })
   }
@@ -98,6 +111,8 @@ compute_densityfdr <- function(obs,
   if (any(is.infinite(fdr$y) | is.na(fdr$y))){
     fdr[ is.infinite(fdr$y) | is.na(fdr$y) ,]$y = 1 # issue #6
   }
+
+  browser()
 
   # this performs the substraction of the observed values against the
   # x values in the fdr dataset
