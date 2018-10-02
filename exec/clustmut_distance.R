@@ -286,23 +286,27 @@ if (opt$verbose){
 vr_res = sortSeqlevels(vr_res)
 vr_res = sort(vr_res)
 
-# we set up the recieving column
-vr_res$event_type = NA
+if (opt$fdr_method == "fdr"){
 
-# we split again by sample and chr
-vr_res_list = split(vr_res,list(sampleNames(vr_res),seqnames(vr_res)))
+  # we set up the recieving column
+  vr_res$event_type = NA
 
-# we search events
-vr_res_list = lapply(vr_res_list, function(vr){
-  vr$event_type = detect_events(vr$fdr,opt$fdr_cutoff,5,"kataegis")
-  return(vr)
-})
+  # we split again by sample and chr
+  vr_res_list = split(vr_res,list(sampleNames(vr_res),seqnames(vr_res)))
 
-vr_res = unlist_GR_base_list(vr_res_list)
+  # we search events
+  vr_res_list = lapply(vr_res_list, function(vr){
+    vr$event_type = detect_events(vr$fdr,opt$fdr_cutoff,5,"kataegis")
+    return(vr)
+  })
 
-vr_res[vr_res$fdr < opt$fdr_cutoff & is.na(vr_res$event_type)]$event_type = "omikli"
+  vr_res = unlist_GR_base_list(vr_res_list)
 
-vr_res$event_type %>% table
+  vr_res[vr_res$fdr < opt$fdr_cutoff & is.na(vr_res$event_type)]$event_type = "omikli"
+
+  vr_res$event_type %>% table
+}
+
 
 
 # output ==============================================================
