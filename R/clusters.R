@@ -92,7 +92,6 @@ compute_fdr_basic <- function(pos_distance,random_matrix){
                        alternative="left",
                        monotonic = FALSE)
   })
-
   fdr_vec = apply(fdr_matrix,1,median)
   return(fdr_vec)
 }

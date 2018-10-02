@@ -104,7 +104,6 @@ compute_densityfdr <- function(obs,
   if (is.list(min_ind)){
     min_ind = unlist(lapply(min_ind, sample,size = 1))
   }
-
   # then I extract the corresponding fdr
   return(fdr[min_ind,]$y)
 }
