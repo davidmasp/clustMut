@@ -112,12 +112,22 @@ median_pruning <- function(fdr,fun){
 
   if (!is.null(tail)){
     tail_mask = fun(fdr$x , median(fdr$x))
-    fdr[tail_mask,"y"] = 1
+    if (sum(tail_mask)==0){
+      warning("THIS SHOULD BE IMPOSSIBLE")
+    } else {
+      fdr[tail_mask,"y"] = 1
+    }
+
   }
 
+  max_mask = fdr$y >= 1
 
-  max_mask = fdr$y > 1
-  fdr[max_mask,]$y = 1
+  if (!sum(max_mask) == 0){
+    fdr[max_mask,]$y = 1
+  } else {
+    # this happens when all the fdr values lower than 1.
+    # nothing should happen
+  }
 
   return(fdr)
 }
