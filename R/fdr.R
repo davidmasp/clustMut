@@ -104,11 +104,25 @@ compute_densityfdr <- function(obs,
   if (is.list(min_ind)){
     min_ind = unlist(lapply(min_ind, sample,size = 1))
   }
+
+
+
   # then I extract the corresponding fdr
   return(fdr[min_ind,]$y)
 }
 
 median_pruning <- function(fdr,fun){
+
+
+
+  max_mask = (fdr$y >= 1 | is.infinite(fdr$y) | is.na(fdr$y))
+  #
+  if (!sum(max_mask,na.rm = TRUE) == 0){
+    fdr[max_mask,]$y = 1
+  } else {
+    # this happens when all the fdr values lower than 1.
+    # nothing should happen
+  }
 
   if (!is.null(tail)){
     tail_mask = fun(fdr$x , median(fdr$x))
@@ -118,15 +132,6 @@ median_pruning <- function(fdr,fun){
       fdr[tail_mask,"y"] = 1
     }
 
-  }
-
-  max_mask = fdr$y >= 1
-
-  if (!sum(max_mask,na.rm = TRUE) == 0){
-    fdr[max_mask,]$y = 1
-  } else {
-    # this happens when all the fdr values lower than 1.
-    # nothing should happen
   }
 
   return(fdr)
