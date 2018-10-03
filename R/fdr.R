@@ -122,7 +122,7 @@ median_pruning <- function(fdr,fun){
 
   max_mask = fdr$y >= 1
 
-  if (!sum(max_mask) == 0){
+  if (!sum(max_mask,na.rm = TRUE) == 0){
     fdr[max_mask,]$y = 1
   } else {
     # this happens when all the fdr values lower than 1.
