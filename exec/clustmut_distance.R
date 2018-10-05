@@ -230,7 +230,14 @@ if (length(file_paths) == 0){
 # that it is not possible to handle a sample which is divided
 # in 2 files. (CAVEAT)
 vr_res = lapply(file_paths,function(x){
-  dat = suppressMessages(readr::read_tsv(x))
+  #browser()
+  dat = suppressMessages(
+    readr::read_tsv(x,
+                    col_types = list(
+                      chr = readr::col_character()
+                      )
+                    )
+    )
   original = nrow(dat)
 
   # apparently this happens in ICGC
