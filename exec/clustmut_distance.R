@@ -292,7 +292,6 @@ if (opt$verbose){
 # we sort to be sure this will make only adjacent groups
 vr_res = sortSeqlevels(vr_res)
 vr_res = sort(vr_res)
-
 if (opt$fdr_method == "fdr"){
 
   # we set up the recieving column
@@ -309,9 +308,11 @@ if (opt$fdr_method == "fdr"){
 
   vr_res = unlist_GR_base_list(vr_res_list)
 
-  vr_res[vr_res$fdr < opt$fdr_cutoff & is.na(vr_res$event_type)]$event_type = "omikli"
+  omikli_mask = vr_res$fdr < opt$fdr_cutoff & is.na(vr_res$event_type)
+  if (sum(omikli_mask) != 0){
+    vr_res[omikli_mask]$event_type = "omikli"
+  }
 
-  vr_res$event_type %>% table
 }
 
 
