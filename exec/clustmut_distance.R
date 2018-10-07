@@ -270,6 +270,14 @@ vr_res = lapply(file_paths,function(x){
 
   return(vr_res)
 })
+
+# handles case when all samples have NULL. This happens when one sample
+# per file is provided and that sample is bad.
+if (all(unlist(lapply(vr_res, is.null)))){
+  # not sure if stoping is the best strategy here.
+  stop("Error: unique sample with no valid mutations.")
+}
+
 names(vr_res) = NULL
 vr_res = do.call("c",vr_res)
 
