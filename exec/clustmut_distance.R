@@ -137,6 +137,13 @@ option_list = list(
     action = "store",
     default = "Hsapiens.UCSC.hg19",
     help = "The genome reference used to compute MSM"
+  ),
+  make_option(
+    c("-b", "--boosting"),
+    action = "store",
+    default = NULL,
+    type = 'character',
+    help = "Stratification file will be read for samples to get groups."
   )
 )
 
@@ -164,7 +171,8 @@ stopifnot(requireNamespace("clustMut",quietly = T))
 clustMut::clustmut_internal_check_dependencies(deps)
 
 # print version ===============================================================
-clustMut::clustmut_internal_return_version(version = (opt$verbose | opt$version),
+clustMut::clustmut_internal_return_version(
+  version = (opt$verbose | opt$version),
                quit = opt$version)
 
 # load packages ===============================================================
@@ -205,6 +213,8 @@ if (interactive()){
   opt$outuput_prefix = glue::glue("clust_{opt$nmuts}")
 
   opt$verbose = T
+
+  opt$boosting = "TCGA-04-1349_mutations_pair_clonality.txt"
 }
 
 
@@ -226,9 +236,34 @@ if (length(file_paths) == 0){
 
 # DISTANCE ===============================================================
 
+if (!is.null(opt$boosting)){
+  boosting_file = readr::read_lines(opt$boosting)
+
+  boosting_split = boosting_file %>% stringr::str_split("_")
+
+  group = boosting_split %>% purrr::map_chr(2)
+  muts = boosting_split %>% purrr::map_chr(1)
+  muts_split = muts %>% stringr::str_split(":")
+
+  starts =  purrr::map(muts_split,2) %>% unlist() %>% as.integer()
+  sqnames = purrr::map_chr(muts_split,1)
+  sample_names = purrr::map_chr(muts_split,3)
+  refs = purrr::map_chr(muts_split,4)
+  alts = purrr::map_chr(muts_split,5)
+  boosting_vr = VRanges(
+    seqnames = sqnames,
+    ranges = IRanges(start =  starts,
+                     width = 1),
+    sampleNames = sample_names,
+    ref = refs,
+    alt = alts,
+    group = group)
+}
+
+
 # first we iterate over each file to compute the FDR, this means
 # that it is not possible to handle a sample which is divided
-# in 2 files. (CAVEAT)
+# in 2 files. (CAVEAT) likely not a problem though
 vr_res = lapply(file_paths,function(x){
   #browser()
   dat = suppressMessages(
@@ -262,11 +297,31 @@ vr_res = lapply(file_paths,function(x){
   # analysis ===================
   tmp = parse_randommut_vr(dat)
 
+  if (!is.null(opt$boosting)){
+    ovr = findOverlaps(tmp$VR,boosting_vr)
+    ol = length(tmp$VR)
+    tmp$VR = tmp$VR[queryHits(ovr)]
+    tmp$RAND = tmp$RAND[queryHits(ovr),]
+    boosting_group = mcols(boosting_vr)[subjectHits(ovr),"group"]
+
+    per = length(tmp$VR) / ol
+    if (opt$verbose){
+      print(glue::glue("{per} mutations discarded because in sample {x} not present in boosting file."))
+    }
+    # here I need to enforce sample Names as grouping factor
+    # inter sample clustering doesn't makes sense in any situation
+    spf = glue::glue("{sampleNames(tmp$VR)}{boosting_group}")
+
+  } else{
+    spf = NULL
+  }
+
   vr_res = clust_dist(vr = tmp$VR,
                       rand_df = tmp$RAND,
                       method = opt$fdr_method,
                       dist_cutoff = opt$dist_cutoff,
-                      n = opt$nmuts)
+                      n = opt$nmuts,
+                      split_factor = spf)
 
   return(vr_res)
 })

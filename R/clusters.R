@@ -108,6 +108,7 @@ compute_fdr_basic <- function(pos_distance,random_matrix){
 #' @param method fdr for local (per mutation) and FDR for tail-based (sample - wise) FDR
 #' @param n Number of mutations enclosed in the IMD calculation. N = 1 for pairs of mutations.
 #' @param dist_cutoff (FDR only) distance cutoff
+#' @param split_factor (optional) By default it will split the VR by sample, however, to get a stratified boosting different factors can be provided. A vector equal size as the VR with the groups to split.
 #'
 #' @return A VR object with an extended metadata column with FDR or fdr values.
 #' @export
@@ -118,7 +119,8 @@ clust_dist <- function(vr,
                        ce_cutoff=1,
                        method="fdr", # FDR
                        n = 1,
-                       dist_cutoff = NULL){
+                       dist_cutoff = NULL,
+                       split_factor = NULL){
 
   if (!is.null(dist_cutoff) & method == "fdr"){
     warning("A distance cutoff exist but method set to fdr, dropping distance cutoff")
@@ -134,7 +136,12 @@ clust_dist <- function(vr,
 
 
   # split the data
-  split_factor = VariantAnnotation::sampleNames(vr)
+  if (is.null(split_factor)){
+    split_factor = VariantAnnotation::sampleNames(vr)
+  } else {
+    split_factor = split_factor
+  }
+
 
   # this should generate a list of indices
   idx_split = base::split(seq_along(split_factor), split_factor)

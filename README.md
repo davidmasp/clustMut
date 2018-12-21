@@ -93,3 +93,18 @@ clustmut_run.sh -i /home/dmas/data/TCGA_MUTS/TCGA_VR/ \
                 -o test \
                 -Vlwtvu
 ```
+
+
+
+### Boosting
+
+
+A file with the following information has to be provied as the `{rndmut_file_name}_stratification`. This file needs to be a list of this level.
+
+```
+chr:pos:sample:ref:alt_{group}
+```
+
+where group is a set of mutations that will be grouped together.
+
+NOTE: Samples will allways be included in the group as default.
