@@ -200,7 +200,7 @@ if (opt$verbose){
 if (interactive()){
   opt$data = "tests_exec/data/"
   opt$recursive = TRUE
-  opt$glob = "*.tsv"
+  opt$glob = "*TCGA-FD-A3N5-01A-11D-A21A-08_WGS_ssm_tcga_conf_rmdup.tsv_w500000.randomized.tsv"
 
   opt$keepMSM = F
   opt$mutlist = F
@@ -214,7 +214,7 @@ if (interactive()){
 
   opt$verbose = T
 
-  opt$boosting = "TCGA-04-1349_mutations_pair_clonality.txt"
+  opt$boosting = "tests_exec/data/TCGA-FD-A3N5_mutations_pair_clonality.txt"
 }
 
 
@@ -265,7 +265,6 @@ if (!is.null(opt$boosting)){
 # that it is not possible to handle a sample which is divided
 # in 2 files. (CAVEAT) likely not a problem though
 vr_res = lapply(file_paths,function(x){
-  #browser()
   dat = suppressMessages(
     readr::read_tsv(x,
                     col_types = list(
@@ -298,13 +297,14 @@ vr_res = lapply(file_paths,function(x){
   tmp = parse_randommut_vr(dat)
 
   if (!is.null(opt$boosting)){
+
     ovr = findOverlaps(tmp$VR,boosting_vr)
     ol = length(tmp$VR)
     tmp$VR = tmp$VR[queryHits(ovr)]
     tmp$RAND = tmp$RAND[queryHits(ovr),]
     boosting_group = mcols(boosting_vr)[subjectHits(ovr),"group"]
 
-    per = length(tmp$VR) / ol
+    per = scales::percent(1 - (length(tmp$VR) / ol))
     if (opt$verbose){
       print(glue::glue("{per} mutations discarded because in sample {x} not present in boosting file."))
     }

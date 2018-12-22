@@ -134,7 +134,6 @@ clust_dist <- function(vr,
   vr = vr[vr_order]
   rand_df = rand_df[vr_order,]
 
-
   # split the data
   if (is.null(split_factor)){
     split_factor = VariantAnnotation::sampleNames(vr)
@@ -151,7 +150,7 @@ clust_dist <- function(vr,
     list(vr = vr[x],RAND = rand_df[x,])
   })
   force(n)
-
+  #browser()
   res = lapply(input_list, function(x){
     switch (method,
             fdr = clust_dist_sample(vr = x$vr,

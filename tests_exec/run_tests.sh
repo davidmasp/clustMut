@@ -21,10 +21,10 @@ else
     echo "Running exec test of clustmut in local mode"
 
     sh clean.sh
-    
+
     sh run_test_lfdr.sh
     sh run_test_sFDR.sh
-    
+
     Rscript check_output_status.R
     EXIT_STATUS=$?
 fi
