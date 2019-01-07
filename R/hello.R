@@ -11,12 +11,28 @@
 ###############################################################################
 
 
-parse_randommut_vr <- function(dat){
-  #browser()
+# warning the context have to match the k of the one coming from RMut output
+# so for now -> 3!
+parse_randommut_vr <- function(dat,context=NULL,reference_set = c("C","A")){
+
   requireNamespace("dplyr", quietly = TRUE)
   requireNamespace("tidyselect", quietly = TRUE)
   # suppressPackageStartupMessages(library(VariantAnnotation))
   # should be solved after issue #26
+
+  if (!is.null(context)){
+    rev_ctx = as.character(Biostrings::reverseComplement(DNAStringSet(reference_set)))
+    ctx_in = c(make_set(x = context,simplify = T),
+               make_set(x = context,simplify = T,simplify_set = rev_ctx))
+
+    sep_pos = nchar(context) - 1
+    sep = stringr::str_sub(context,start = sep_pos,sep_pos)
+    mut_types = paste(dat$ctx,dat$alt,sep = sep)
+    ol = nrow(dat)
+    dat = dat[mut_types %in% ctx_in,]
+    per = scales::percent(1 - (nrow(dat)/ol))
+    warning(glue::glue("{per} of mutations removed due to context filter"))
+  }
 
   dat_vr = VRanges(seqnames = dat$chr,
                    ranges = IRanges(start = dat$end,
