@@ -1,7 +1,12 @@
 context("test-my-test.R")
 
-test_that("multiplication works", {
-  expect_equal(2 * 2, 4)
+test_that("pipes works", {
+  res = 2
+
+  res %<>% magrittr::multiply_by(2)
+  res2 = res %>% magrittr::multiply_by(2)
+  expect_equal(res, 4)
+  expect_equal(res2,8)
 })
 
 
