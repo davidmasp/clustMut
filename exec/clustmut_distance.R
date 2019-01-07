@@ -144,6 +144,13 @@ option_list = list(
     default = NULL,
     type = 'character',
     help = "Stratification file will be read for samples to get groups."
+  ),
+  make_option(
+    c("-c", "--context"),
+    action = "store",
+    default = NULL,
+    type = 'character',
+    help = "Context filtering."
   )
 )
 
@@ -214,7 +221,8 @@ if (interactive()){
 
   opt$verbose = T
 
-  opt$boosting = "tests_exec/data/TCGA-FD-A3N5_mutations_pair_clonality.txt"
+  opt$boosting = NULL
+  opt$context = "TCN>N"
 }
 
 
@@ -294,7 +302,7 @@ vr_res = lapply(file_paths,function(x){
   }
 
   # analysis ===================
-  tmp = parse_randommut_vr(dat)
+  tmp = parse_randommut_vr(dat,context = opt$context)
 
   if (!is.null(opt$boosting)){
 
