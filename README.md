@@ -108,3 +108,12 @@ chr:pos:sample:ref:alt_{group}
 where group is a set of mutations that will be grouped together.
 
 NOTE: Samples will allways be included in the group as default.
+
+
+## Troubleshooting
+
+
+| Error code | Situation                                                                                                                                                | Solution                           |
+|------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------|
+| 123        | When the sample (or multiple samples) doesn't have any valid mutation. This means all mutations mutations have been excluded because of the filters used | Remove that sample or the filters. |
+|            |                                                                                                                                                          |                                    |
