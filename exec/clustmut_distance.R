@@ -207,7 +207,7 @@ if (opt$verbose){
 if (interactive()){
   opt$data = "tests_exec/data/"
   opt$recursive = TRUE
-  opt$glob = "*TCGA-FD-A3N5-01A-11D-A21A-08_WGS_ssm_tcga_conf_rmdup.tsv_w500000.randomized.tsv"
+  opt$glob = "*TCGA-HC-7079-01A-11D-1961-08_WGS_ssm_tcga_conf_rmdup.tsv_w500000.randomized.tsv"
 
   opt$keepMSM = F
   opt$mutlist = F
@@ -335,10 +335,11 @@ vr_res = lapply(file_paths,function(x){
 })
 
 # handles case when all samples have NULL. This happens when one sample
-# per file is provided and that sample is bad.
+# per file is provided and that sample has no context mutations ie..
 if (all(unlist(lapply(vr_res, is.null)))){
   # not sure if stoping is the best strategy here.
-  stop("Error: unique sample with no valid mutations.")
+  q("no", status = 123, runLast = FALSE)
+  #stop("Error: unique sample with no valid mutations.")
 }
 
 names(vr_res) = NULL
