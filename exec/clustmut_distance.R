@@ -338,8 +338,8 @@ vr_res = lapply(file_paths,function(x){
 # per file is provided and that sample has no context mutations ie..
 if (all(unlist(lapply(vr_res, is.null)))){
   # not sure if stoping is the best strategy here.
+  warning("Error: unique sample with no valid mutations.")
   q("no", status = 123, runLast = FALSE)
-  #stop("Error: unique sample with no valid mutations.")
 }
 
 names(vr_res) = NULL
