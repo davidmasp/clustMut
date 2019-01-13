@@ -207,7 +207,7 @@ if (opt$verbose){
 if (interactive()){
   opt$data = "tests_exec/data/"
   opt$recursive = TRUE
-  opt$glob = "*TCGA-HC-7079-01A-11D-1961-08_WGS_ssm_tcga_conf_rmdup.tsv_w500000.randomized.tsv"
+  opt$glob = "*SA562503_w500000.randomized.tsv"
 
   opt$keepMSM = F
   opt$mutlist = F
@@ -222,7 +222,8 @@ if (interactive()){
   opt$verbose = T
 
   opt$boosting = NULL
-  opt$context = "TCN>N"
+  #opt$context = "TCN>N"
+  opt$pair_set = "T"
 }
 
 

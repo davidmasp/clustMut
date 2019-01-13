@@ -177,13 +177,19 @@ clust_dist_sample <- function(vr,rand_df,ce_cutoff = 1,n = 1){
   stopifnot(length(sample_name) == 1 )
 
   ## FILTERS
+  ## 1) N mask
   n_mask = grepl("N",vr$ctx)
   warning(glue::glue("{scales::percent(sum(n_mask)/length(vr))} removed due to N mask"))
 
   vr = vr[!n_mask]
   rand_df = rand_df[!n_mask,]
 
-  # filter complex events
+  if (0 == length(vr)){
+    warning(glue::glue("Sample {sample_name} removed because no valid mutations were available"))
+    return(NULL)
+  }
+
+  # 2) filter complex events
   ce_mask = mask_complex_events(vr, cutoff = ce_cutoff)
 
   vr = vr[!ce_mask]
