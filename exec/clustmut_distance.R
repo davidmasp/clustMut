@@ -207,7 +207,7 @@ if (opt$verbose){
 if (interactive()){
   opt$data = "tests_exec/data/"
   opt$recursive = TRUE
-  opt$glob = "*SA562503_w500000.randomized.tsv"
+  opt$glob = "*TCGA-CG-5723-01A-11D-1600-08_randomized_FN_0.75_simulated_clust_rmdup.tsv_w500000.randomized.tsv"
 
   opt$keepMSM = F
   opt$mutlist = F
@@ -220,10 +220,9 @@ if (interactive()){
   opt$outuput_prefix = glue::glue("clust_{opt$nmuts}")
 
   opt$verbose = T
-
-  opt$boosting = NULL
-  #opt$context = "TCN>N"
   opt$pair_set = "T"
+  #opt$boosting = "tests_exec/data/TCGA-CG-5723-01A-11D-1600-08_mutations_strand2.txt"
+  #opt$context = "TCN>N"
 }
 
 
@@ -324,7 +323,7 @@ vr_res = lapply(file_paths,function(x){
   } else{
     spf = NULL
   }
-
+  browser()
   vr_res = clust_dist(vr = tmp$VR,
                       rand_df = tmp$RAND,
                       method = opt$fdr_method,
