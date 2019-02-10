@@ -220,8 +220,8 @@ if (interactive()){
   opt$outuput_prefix = glue::glue("clust_{opt$nmuts}")
 
   opt$verbose = T
-  opt$pair_set = "T"
-  #opt$boosting = "tests_exec/data/TCGA-CG-5723-01A-11D-1600-08_mutations_strand2.txt"
+  opt$pair_set = "N"
+  opt$boosting = "tests_exec/data/TCGA-CG-5723-01A-11D-1600-08_mutations_strand2.txt"
   #opt$context = "TCN>N"
 }
 

@@ -133,6 +133,7 @@ clust_dist <- function(vr,
   vr_order = GenomicRanges::order(vr)
   vr = vr[vr_order]
   rand_df = rand_df[vr_order,]
+  split_factor = split_factor[vr_order]
 
   # split the data
   if (is.null(split_factor)){
