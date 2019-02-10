@@ -247,17 +247,20 @@ clust_dist_sample <- function(vr,rand_df,ce_cutoff = 1,n = 1){
     return(NULL)
   }
 
-  # second timestamp
-  name = Sys.time() %>% format("%y%m%d%H%M%S")
-  saveRDS(object = list(mdist = mdist,
-                        rm = random_matrix,
-                        ref_u = unique(ref(vr)),
-                        sample = unique(sampleNames(vr))),
-          file = glue::glue("{name}_test.rds"))
+
 
   fdr = compute_fdr_basic(pos_distance = mdist,
                           random_matrix = random_matrix)
 
+
+  # second timestamp
+  name = Sys.time() %>% format("%y%m%d%H%M%S")
+  saveRDS(object = list(mdist = mdist,
+                        vr = vr,
+                        rm = random_matrix,
+                        ref_u = unique(ref(vr)),
+                        sample = unique(sampleNames(vr))),
+          file = glue::glue("{name}_test.rds"))
 
   vr$fdr = fdr
   vr$dist = mdist
