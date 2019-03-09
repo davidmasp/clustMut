@@ -33,17 +33,15 @@ This is a one time only action, when you update your package the new version wil
 First, clone the repository and builod the package
 
 ```bash
-
+git clone gitlab@fsupeksvr.irbbarcelona.pcb.ub.es:dmas/clustMut.git
+cd clustMt
+R CMD INSTALL --no-multiarch --with-keep.source .
 ```
 
-```bash
-cp clustmut_run.sh ~/bin/
-```
-
-and give it execution permisions.
+Then link the clustMut executable (bash script) to a folder in your path.
 
 ```bash
-chmod +x script.sh
+ln -s clustmut ~/bin/
 ```
 
 ### Dependencies
@@ -55,58 +53,18 @@ R packages should be installed when instaling the package. No other packages are
 You can use clustmut to obtain kataegis events, clusters based on VAF or clustered mutations based on the Edit distance.
 Run it with the appropiate mode command.
 
-### VAF
+### distance
 
 ```bash
-clustmut_run.sh -i /home/dmas/data/TCGA_MUTS/TCGA_VR/ \
-                --glob "*_VR.rds" \
-                --recursive \
-                --mode vaf \
-                -a ~/data/CRG_alignability/hg19/LEGACY/crg36AlignExtNoBlackRmvsh19_RngMask_savedInt\=TRUE.bed \
-                -o test \
-                -Vlwtvu
-```
-
-### distance (difuse clusters)
-
-```bash
-clustmut_run.sh -i /home/dmas/data/TCGA_MUTS/RNDmut/ \
+clustmut distance -i /home/dmas/data/TCGA_MUTS/RNDmut/ \
                 --glob "*randomized.tsv" \
                 --recursive \
-                --mode distance \
                 -o test_omichili \
                 -N 1 \
                 -Vlwtvu
 ```
 
-### distance (kataegis)
-
-```bash
-clustmut_run.sh -i /home/dmas/data/TCGA_MUTS/RNDmut/ \
-                --glob "*randomized.tsv" \
-                --recursive \
-                --mode distance \
-                -o test_kataegis \
-                -N 4 \
-                -Vlwtvu
-```
-
-### edit
-
-```bash
-clustmut_run.sh -i /home/dmas/data/TCGA_MUTS/TCGA_VR/ \
-                --glob "*_VR.rds" \
-                --recursive \
-                --mode edit \
-                -a ~/data/CRG_alignability/hg19/LEGACY/crg36AlignExtNoBlackRmvsh19_RngMask_savedInt\=TRUE.bed \
-                -o test \
-                -Vlwtvu
-```
-
-
-
 ### Boosting
-
 
 A file with the following information has to be provied as the `{rndmut_file_name}_stratification`. This file needs to be a list of this level.
 
