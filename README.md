@@ -12,6 +12,8 @@ This package uses XXX different statistics to compute and detect those events.
 
 ## Installation
 
+**Using devtools**
+
 Install the package using the following command. Note that is needed to install genomicHelpersDMP manually from its repository [here](http://fsupeksvr.irbbarcelona.pcb.ub.es/gitlab/dmas/genomicHelpersDMP)
 
 ```bash
@@ -26,6 +28,13 @@ devtools::install_git(
 Then, move the script to run to your `bin` or to a folder available in your `$PATH`.
 This is a one time only action, when you update your package the new version will be available from the same script.
 
+**Cloning the repository**
+
+First, clone the repository and builod the package
+
+```bash
+
+```
 
 ```bash
 cp clustmut_run.sh ~/bin/
