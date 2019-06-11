@@ -1,0 +1,28 @@
+BootStrap: docker
+From: rocker/tidyverse:3.5.3
+
+%environment
+    PATH="/clustmut_bin:$PATH"
+
+%labels
+    Maintainer David Mas-Ponte <david.mas@irbbarcelona.org>
+    Version v0.0.1
+
+%post
+    git clone gitlab@fsupeksvr.irbbarcelona.pcb.ub.es:dmas/clustMut.git
+    cd clustMt
+    git checkout dev
+    R CMD INSTALL --no-multiarch --with-keep.source .
+
+    mkdir clustmut_bin
+    ln -s clustmut /clustmut_bin
+
+%help
+    Singularity definition to install clustmut version DEV.
+
+%runscript
+    echo "Container was created $NOW"
+    echo "Arguments received: $*"
+    exec echo "$@"
+
+
