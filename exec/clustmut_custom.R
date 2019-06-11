@@ -15,7 +15,7 @@ cli::boxx(c(glue::glue("clustmut version: {packageVersion('clustMut')}"),
 suppressPackageStartupMessages(require(optparse))
 
 option_list = list(
-  make_option(
+
     make_option(
       c("-Y","--yawn"),
       action = "store_true",
@@ -23,6 +23,7 @@ option_list = list(
       help = "Print version of the package and quit",
       dest = "version"
     ),
+   make_option(
     c("-i", "--data"),
     action = "store",
     type = 'character',
@@ -65,19 +66,22 @@ option_list = list(
   make_option(
     c("-v", "--verbose"),
     action = "store_true",
-    dest = "verbose",default = FALSE,
+    dest = "verbose",
+    default = FALSE,
     help = "Give a more vebose output"
   ),
   make_option(
     c("-I", "--IMD"),
     action = "store",
-    dest = "imd",default = 10000,
+    dest = "imd",
+    default = 10000,
     help = "Cluster length"
   ),
   make_option(
     c("-N", "--nmuts"),
     action = "store",
-    dest = "nmuts",default = 6,
+    dest = "nmuts",
+    default = 6,
     help = "Number of mutations in a cluster"
   ),
   make_option(
@@ -124,12 +128,6 @@ option_list = list(
     help = "The genome reference used to compute MSM"
   )
 )
-
-
-
-## reading
-
-
 
 opt = parse_args(OptionParser(option_list=option_list))
 
