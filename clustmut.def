@@ -11,6 +11,7 @@ From: rocker/tidyverse:3.5.3
 %post
     R -e 'install.packages("vegan")'
     R -e 'install.packages("ggrepel")'
+    R -e 'install.packages("optparse")'
     
     R -e 'install.packages("BiocManager")'
     R -e 'BiocManager::install("VariantAnnotation")'
@@ -21,14 +22,17 @@ From: rocker/tidyverse:3.5.3
 
     cd genomicHelpersDMP_src
     R CMD INSTALL --no-multiarch --with-keep.source .
+
+    cd /
     
     git clone http://fsupeksvr.irbbarcelona.pcb.ub.es/gitlab/dmas/clustMut.git clustMut_src
     cd clustMut_src
     git checkout dev
     R CMD INSTALL --no-multiarch --with-keep.source .
 
-    mkdir clustmut_bin
-    ln -s clustmut /clustmut_bin
+    cp clustmut /bin/clustmut
+
+
 
 %help
     Singularity definition to install clustmut version DEV.
