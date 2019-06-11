@@ -27,3 +27,5 @@ tests_exec/.slurm_*.out
 
 # test files
 .chcksum_*.txt
+*.simg
+
