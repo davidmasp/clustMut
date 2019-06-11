@@ -9,8 +9,8 @@ From: rocker/tidyverse:3.5.3
     Version v0.0.1
 
 %post
-    git clone http://fsupeksvr.irbbarcelona.pcb.ub.es/gitlab/dmas/clustMut.git
-    cd clustMt
+    git clone http://fsupeksvr.irbbarcelona.pcb.ub.es/gitlab/dmas/clustMut.git clustMut_src
+    cd clustMut_src
     git checkout dev
     R CMD INSTALL --no-multiarch --with-keep.source .
 
