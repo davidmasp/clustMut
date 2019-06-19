@@ -189,7 +189,8 @@ roberts_pvalue <- function(x, k, p){
 
 custom_basic_clustering <- function(vr,
                                     IMD,
-                                    nmuts){
+                                    nmuts,
+                                    event_categories){
   # step 0: Unique sample assumption
   stopifnot(length(unique(sampleNames(vr))) == 1)
 
@@ -224,6 +225,14 @@ custom_basic_clustering <- function(vr,
     vr[selected_muts]$custom_clust = TRUE
   }
 
+  # call events for basic
+  pvals = as.numeric(!vr$custom_clust) # important to reverse the mask
+  events_res = detect_events(x = pvals,
+                             sig_cutoff = 0.5, # this val is irrelevant because !T -> 0
+                             event_categories = event_categories)
+
+  vr$event_type = events_res$events
+  vr$event_muts = events_res$lengths
   return(vr)
 }
 

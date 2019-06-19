@@ -126,6 +126,13 @@ option_list = list(
     action = "store",
     default = "Hsapiens.UCSC.hg19",
     help = "The genome reference used to compute MSM"
+  ),
+  make_option(
+    c("-e", "--events"),
+    action = "store",
+    default = "omikli:2_kataegis:5",
+    type = 'character',
+    help = "Event categories encoded as event:numberOfMuts. Different events can be encoded by separating with _"
   )
 )
 
@@ -173,6 +180,18 @@ if (interactive()){
 }
 
 
+if (!is.null(opt$events)){
+  events_input_list = stringr::str_split(string = opt$events,pattern = "_") %>%
+    unlist() %>%
+    stringr::str_split(string = .,pattern = ":")
+
+  events_categories = as.integer(unlist(purrr::map(events_input_list,2)))
+  names(events_categories) = as.character(unlist(purrr::map(events_input_list,
+                                                            1)))
+} else {
+  stop("argument events is needed")
+}
+
 path = opt$data
 file_paths = fs::dir_ls(path,
                         glob = opt$glob,
@@ -194,7 +213,8 @@ if (opt$cores == 1 | is.null(opt$cores)){
   vr_res = purrr::map(dat,function(vr){
     vr_res = clustMut::custom_basic_clustering(vr = vr,
                                                IMD = opt$imd,
-                                               nmuts = opt$nmuts)
+                                               nmuts = opt$nmuts,
+                                               event_categories = events_categories)
 
     pb$tick()
     return(vr_res)

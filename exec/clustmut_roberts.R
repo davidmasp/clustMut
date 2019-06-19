@@ -132,8 +132,6 @@ option_list = list(
   )
 )
 
-
-
 opt = parse_args(OptionParser(option_list=option_list))
 
 if (opt$verbose) {
@@ -216,8 +214,6 @@ vr_res = purrr::map(dat,function(vr){
     dbSNP = dbSNP,
     event_categories = events_categories
   )
-
-
   return(vr_res)
 })
 
