@@ -85,12 +85,6 @@ option_list = list(
     help = "Number of mutations in a cluster"
   ),
   make_option(
-    c("-n", "--cores"),
-    action = "store",
-    default = 5,
-    type = 'integer',
-    help = "Number of cores to parallelize [default %default]"
-  ),make_option(
     c("-V", "--keepVR"),
     action = "store_true",
     default = FALSE,
@@ -151,19 +145,11 @@ if (opt$verbose){
   library(clustMut)
   library(genomicHelpersDMP)
   library(magrittr)
-  if (!is.null(opt$cores)){
-    stopifnot(requireNamespace("parallel",quietly = T))
-    library(parallel)
-  }
 } else {
   suppressPackageStartupMessages(library(VariantAnnotation))
   suppressPackageStartupMessages(library(clustMut))
   suppressPackageStartupMessages(library(genomicHelpersDMP))
   suppressPackageStartupMessages(library(magrittr))
-  if (!is.null(opt$cores)){
-    stopifnot(requireNamespace("parallel",quietly = T))
-    suppressPackageStartupMessages(library(parallel))
-  }
 }
 
 
@@ -201,44 +187,20 @@ dat = VR_preprocessing(file_paths = file_paths,
                        pair_set = opt$pair_set,
                        alignability_mask = opt$alignability_mask)
 
+library(progress)
+pb <- progress_bar$new(
+  format = "Computing clusters by Custom method :percent eta: :eta",
+  total = length(file_paths), clear = FALSE)
 
+vr_res = purrr::map(dat,function(vr){
+  vr_res = clustMut::custom_basic_clustering(vr = vr,
+                                             IMD = opt$imd,
+                                             nmuts = opt$nmuts,
+                                             event_categories = events_categories)
 
-
-if (opt$cores == 1 | is.null(opt$cores)){
-  library(progress)
-  pb <- progress_bar$new(
-    format = "Computing clusters by Custom method :percent eta: :eta",
-    total = length(file_paths), clear = FALSE)
-
-  vr_res = purrr::map(dat,function(vr){
-    vr_res = clustMut::custom_basic_clustering(vr = vr,
-                                               IMD = opt$imd,
-                                               nmuts = opt$nmuts,
-                                               event_categories = events_categories)
-
-    pb$tick()
-    return(vr_res)
-  })
-
-} else {
-  cat("entering parallel mode")
-  cl = parallel::makeCluster(opt$cores)
-
-  parallel::clusterEvalQ(cl = cl,library(clustMut))
-  clusterEvalQ(cl = cl,library(genomicHelpersDMP))
-  clusterExport(cl = cl,varlist = c("opt"),envir=environment())
-
-  vr_res = parLapply(cl = cl,
-                     X = dat,
-                     fun = function(vr){
-                       vr_res = clustMut::custom_basic_clustering(vr = vr,
-                                                                  IMD = opt$imd,
-                                                                  nmuts = opt$nmuts)
-                       return(vr_res)
-                     })
-
-  stopCluster(cl)
-}
+  pb$tick()
+  return(vr_res)
+})
 
 
 
