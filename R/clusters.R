@@ -120,7 +120,9 @@ clust_dist <- function(vr,
                        method="fdr", # FDR
                        n = 1,
                        dist_cutoff = NULL,
-                       split_factor = NULL){
+                       split_factor = NULL,
+                       event_categories,
+                       event_fdr){
 
   if (!is.null(dist_cutoff) & method == "fdr"){
     warning("A distance cutoff exist but method set to fdr, dropping distance cutoff")
@@ -156,7 +158,9 @@ clust_dist <- function(vr,
     switch (method,
             fdr = clust_dist_sample(vr = x$vr,
                                     rand_df = x$RAND,
-                                    n = n),
+                                    n = n,
+                                    event_categories = event_categories,
+                                    event_fdr = event_fdr),
             FDR = clust_dist_sample_FDR(vr = x$vr,
                                         rand_df = x$RAND,
                                         dist_cutoff = dist_cutoff,

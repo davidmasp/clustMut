@@ -151,6 +151,13 @@ option_list = list(
     default = NULL,
     type = 'character',
     help = "Context filtering."
+  ),
+  make_option(
+    c("-e", "--events"),
+    action = "store",
+    default = "omikli:2_kataegis:5",
+    type = 'character',
+    help = "Event categories encoded as event:numberOfMuts. Different events can be encoded by separating with _"
   )
 )
 
@@ -223,6 +230,19 @@ if (interactive()){
   opt$pair_set = "N"
   opt$boosting = "tests_exec/data/TCGA-CG-5723-01A-11D-1600-08_mutations_strand2.txt"
   #opt$context = "TCN>N"
+}
+
+
+if (!is.null(opt$events)){
+  events_input_list = stringr::str_split(string = opt$events,pattern = "_") %>%
+    unlist() %>%
+    stringr::str_split(string = .,pattern = ":")
+
+  events_categories = as.integer(unlist(purrr::map(events_input_list,2)))
+  names(events_categories) = as.character(unlist(purrr::map(events_input_list,
+                                                            1)))
+} else {
+  stop("argument events is needed")
 }
 
 
@@ -329,7 +349,9 @@ vr_res = lapply(file_paths,function(x){
                       method = opt$fdr_method,
                       dist_cutoff = opt$dist_cutoff,
                       n = opt$nmuts,
-                      split_factor = spf)
+                      split_factor = spf,
+                      event_categories = events_categories,
+                      event_fdr = fdr_cutoff)
 
   return(vr_res)
 })
