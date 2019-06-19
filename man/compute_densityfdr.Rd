@@ -5,7 +5,7 @@
 \title{Gaussian density local fdr estimator}
 \usage{
 compute_densityfdr(obs, null, monotonic = TRUE, alternative = c("left",
-  "right"))
+  "right", "two.tails"))
 }
 \arguments{
 \item{obs}{nonnull distribution of values}
