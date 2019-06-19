@@ -266,7 +266,7 @@ clust_dist_sample <- function(vr,
   MDF$exp_dist = xp_dist
   MDF$tp = sum(1- vr$fdr)
 
-  events_out = detect_events(x = vr$fdr,
+  events_out = detect_events(x = fdr,
                 sig_cutoff = event_fdr,
                 event_categories = event_categories)
 
@@ -274,7 +274,6 @@ clust_dist_sample <- function(vr,
   MDF$event_muts = events_out$lengths
 
   mcols(vr) = MDF
-
 
   return(vr)
 }
