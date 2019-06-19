@@ -351,7 +351,7 @@ vr_res = lapply(file_paths,function(x){
                       n = opt$nmuts,
                       split_factor = spf,
                       event_categories = events_categories,
-                      event_fdr = fdr_cutoff)
+                      event_fdr = opt$fdr_cutoff)
 
   return(vr_res)
 })
