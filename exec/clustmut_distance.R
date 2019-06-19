@@ -323,7 +323,7 @@ vr_res = lapply(file_paths,function(x){
   } else{
     spf = NULL
   }
-  browser()
+  #browser()
   vr_res = clust_dist(vr = tmp$VR,
                       rand_df = tmp$RAND,
                       method = opt$fdr_method,
