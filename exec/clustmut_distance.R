@@ -359,36 +359,6 @@ if (opt$verbose){
   cat("\n")
 }
 
-# EVENTS ====================================================================
-
-# we sort to be sure this will make only adjacent groups
-vr_res = sortSeqlevels(vr_res)
-vr_res = sort(vr_res)
-if (opt$fdr_method == "fdr"){
-
-  # we set up the recieving column
-  vr_res$event_type = NA
-
-  # we split again by sample and chr
-  vr_res_list = split(vr_res,list(sampleNames(vr_res),seqnames(vr_res)))
-
-  # we search events
-  vr_res_list = lapply(vr_res_list, function(vr){
-    vr$event_type = detect_events(vr$fdr,opt$fdr_cutoff,5,"kataegis")
-    return(vr)
-  })
-
-  vr_res = unlist_GR_base_list(vr_res_list)
-
-  omikli_mask = vr_res$fdr < opt$fdr_cutoff & is.na(vr_res$event_type)
-  if (sum(omikli_mask) != 0){
-    vr_res[omikli_mask]$event_type = "omikli"
-  }
-
-}
-
-
-
 # output ==============================================================
 clustmut_internal_return_output(
   vr_res = vr_res,
