@@ -9,6 +9,39 @@ inverse_complex_rle <- function(x, column, ...){
   rep.int(v, le)
 }
 
+
+detect_events_roberts <- function(vr,varname = "roberts_clust"){
+
+  stopifnot(length(unique(sampleNames(vr))) == 1 )
+
+  vr <- sortSeqlevels(vr)
+  vr <- sort(vr)
+
+  events_vector = rep(NA,length(vr))
+
+  clust_mask = mcols(vr)[[varname]]
+
+  events_vector[clust_mask] = "omikli"
+
+  kat_events = clustMut::detect_events(as.numeric(!clust_mask),
+                                       sig_cutoff = 0.5,
+                                       event_cutoff = 5,
+                                       event_value = "kataegis")
+
+  if (length(kat_events)!=length(events_vector)){
+    browser()
+  }
+
+  events_vector[!is.na(kat_events)] = kat_events[!is.na(kat_events)]
+
+  DF = mcols(vr)
+  DF$event_type = events_vector
+  mcols(vr) = DF
+
+  return(vr)
+}
+
+
 #' Detect events from fdr vectors
 #'
 #' @param x a numeric vector with lfdr values

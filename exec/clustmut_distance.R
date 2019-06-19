@@ -56,13 +56,6 @@ option_list = list(
     help = "fdr cutoff to compute the mutation subtype spectrum [default %default]"
   ),
   make_option(
-    c("-n", "--cores"),
-    action = "store",
-    default =  NULL,
-    type = 'integer',
-    help = "Number of cores to parallelize [default %default]"
-  ),
-  make_option(
     c("-r", "--recursive"),
     action = "store_true",
     dest = "recursive",default = FALSE,

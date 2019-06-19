@@ -86,13 +86,6 @@ option_list = list(
     c("-S", "--use_dbSNP"),
     action = "store_true",default = FALSE,
     help = "Wheter or not to use dbSNP"
-  ),
-  make_option(
-    c("-n", "--cores"),
-    action = "store",
-    default = 5,
-    type = 'integer',
-    help = "Number of cores to parallelize [default %default]"
   ),make_option(
     c("-V", "--keepVR"),
     action = "store_true",
@@ -129,6 +122,13 @@ option_list = list(
     action = "store",
     default = "Hsapiens.UCSC.hg19",
     help = "The genome reference used to compute MSM"
+  ),
+  make_option(
+    c("-e", "--events"),
+    action = "store",
+    default = "omikli:2_kataegis:5",
+    type = 'character',
+    help = "Event categories encoded as event:numberOfMuts. Different events can be encoded by separating with _"
   )
 )
 
@@ -149,19 +149,11 @@ if (opt$verbose){
   library(clustMut)
   library(genomicHelpersDMP)
   library(magrittr)
-  if (!is.null(opt$cores)){
-    stopifnot(requireNamespace("parallel",quietly = T))
-    library(parallel)
-  }
 } else {
   suppressPackageStartupMessages(library(VariantAnnotation))
   suppressPackageStartupMessages(library(clustMut))
   suppressPackageStartupMessages(library(genomicHelpersDMP))
   suppressPackageStartupMessages(library(magrittr))
-  if (!is.null(opt$cores)){
-    stopifnot(requireNamespace("parallel",quietly = T))
-    suppressPackageStartupMessages(library(parallel))
-  }
 }
 
 
@@ -176,9 +168,19 @@ if (interactive()){
   opt$mutlist = TRUE
   opt$keep_uncl = TRUE
   opt$use_dbSNP = FALSE
-  opt$cores = 1
 }
 
+if (!is.null(opt$events)){
+  events_input_list = stringr::str_split(string = opt$events,pattern = "_") %>%
+    unlist() %>%
+    stringr::str_split(string = .,pattern = ":")
+
+  events_categories = as.integer(unlist(purrr::map(events_input_list,2)))
+  names(events_categories) = as.character(unlist(purrr::map(events_input_list,
+                                                            1)))
+} else {
+  stop("argument events is needed")
+}
 
 path = opt$data
 file_paths = fs::dir_ls(path,
@@ -195,64 +197,34 @@ if (!opt$use_dbSNP){
   dbSNP = SNPlocs.Hsapiens.dbSNP144.GRCh37::SNPlocs.Hsapiens.dbSNP144.GRCh37
 }
 
-if (opt$cores == 1 | is.null(opt$cores)){
-  #browser()
-  library(progress)
-  pb <- progress_bar$new(
-    format = "Computing clusters by Roberts method, :sample ,  :percent eta: :eta",
-    total = length(file_paths), clear = FALSE)
+#browser()
+library(progress)
+pb <- progress_bar$new(
+  format = "Computing clusters by Roberts method, :sample , :percent eta: :eta",
+  total = length(file_paths), clear = FALSE)
 
 
 
-  vr_res = purrr::map(dat,function(vr){
-    #browser()
-    pb$tick(tokens = list(sample = unique(sampleNames(vr))))
-    vr_res = roberts_clusters(
-      vr = vr,
-      delta = opt$delta,
-      ce_cutoff = 10,
-      G_percent = opt$genome_percent,
-      pval_cutoff = opt$pvalcutoff,
-      dbSNP = dbSNP
-    )
+vr_res = purrr::map(dat,function(vr){
+  pb$tick(tokens = list(sample = unique(sampleNames(vr))))
+  vr_res = roberts_clusters(
+    vr = vr,
+    delta = opt$delta,
+    ce_cutoff = 10,
+    G_percent = opt$genome_percent,
+    pval_cutoff = opt$pvalcutoff,
+    dbSNP = dbSNP,
+    event_categories = events_categories
+  )
 
 
-    return(vr_res)
-  })
-
-} else {
-  cat("entering in parallel mode")
-  cl = parallel::makeCluster(opt$cores)
-
-  parallel::clusterEvalQ(cl = cl,library(clustMut))
-  clusterEvalQ(cl = cl,library(genomicHelpersDMP))
-  clusterExport(cl = cl,varlist = c("opt","dbSNP"),envir=environment())
-
-  vr_res = parLapply(cl = cl,
-                     X = dat,
-                     fun = function(vr){
-                       vr_res = clustMut::roberts_clusters(
-                         vr = vr,
-                         delta = opt$delta,
-                         ce_cutoff = 10,
-                         G_percent = opt$genome_percent,
-                         pval_cutoff = opt$pvalcutoff,
-                         dbSNP = dbSNP
-                       )
-                       return(vr_res)
-                     })
-
-  stopCluster(cl)
-}
-
-
+  return(vr_res)
+})
 
 names(vr_res) = NULL
 vr_res <- do.call(what = "c", args = vr_res)
 all_samples = length(unique(VariantAnnotation::sampleNames(vr_res)))
 cli::boxx(glue::glue("Number of samples detected: {all_samples}"))
-
-
 
 # OUTPUT =======================================================================
 

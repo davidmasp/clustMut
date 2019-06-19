@@ -23,6 +23,7 @@ roberts_clusters <- function(vr,
                              ce_cutoff = 10,
                              G_percent = 1, # 0.01 per exomes?
                              pval_cutoff = 1e-4,
+                             event_categories,
                              dbSNP) {
 
   #browser()
@@ -66,6 +67,16 @@ roberts_clusters <- function(vr,
   if (length(idx) > 0){
     vr[idx]$roberts_clust = TRUE
   }
+
+
+  # call events for roberts
+  pvals = as.numeric(!vr$roberts_clust) # important to reverse the mask
+  events_res = detect_events(x = pvals,
+                sig_cutoff = 0.5, # this val is irrelevant because !T -> 0
+                event_categories = event_categories)
+
+  vr$event_type = events_res$events
+  vr$event_muts = events_res$lengths
 
   return(vr)
 }
