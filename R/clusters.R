@@ -169,7 +169,12 @@ clust_dist <- function(vr,
 }
 
 
-clust_dist_sample <- function(vr,rand_df,ce_cutoff = 1,n = 1){
+clust_dist_sample <- function(vr,
+                              rand_df,
+                              ce_cutoff = 1,
+                              n = 1,
+                              event_categories = c("omikli" = 2,"kataegis" = 5),
+                              event_fdr = 0.2){
 
   stopifnot(requireNamespace("VariantAnnotation",quietly = TRUE))
 
@@ -251,13 +256,25 @@ clust_dist_sample <- function(vr,rand_df,ce_cutoff = 1,n = 1){
   fdr = compute_fdr_basic(pos_distance = mdist,
                           random_matrix = random_matrix)
 
-  vr$fdr = fdr
-  vr$dist = mdist
+  MDF = mcols(vr)
+
+  MDF$fdr = fdr
+  MDF$dist = mdist
   rc= sample(ncol(random_matrix),size = 1)
   xp_dist = random_matrix[,rc]
   xp_dist = xp_dist[!is.na(xp_dist)]
-  vr$exp_dist = xp_dist
-  vr$tp = sum(1- vr$fdr)
+  MDF$exp_dist = xp_dist
+  MDF$tp = sum(1- vr$fdr)
+
+  events_out = detect_events(x = vr$fdr,
+                sig_cutoff = event_fdr,
+                event_categories = event_categories)
+
+  MDF$event_type = events_out$events
+  MDF$event_muts = events_out$lengths
+
+  mcols(vr) = MDF
+
 
   return(vr)
 }

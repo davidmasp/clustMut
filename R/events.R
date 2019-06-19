@@ -9,19 +9,45 @@ inverse_complex_rle <- function(x, column, ...){
   rep.int(v, le)
 }
 
-detect_events <- function(x,sig_cutoff,event_cutoff,event_value){
+#' Detect events from fdr vectors
+#'
+#' @param x a numeric vector with lfdr values
+#' @param sig_cutoff the significance cutoff
+#' @param event_categories a named vector with number of the mutations in the event as values and names of the events as names.
+#'
+#' @return Returns a list with events and length of the stretch. Both with same total length as the fdr vector provided.
+#' @export
+#'
+#' @examples
+#'
+#' fdr_test =c(runif(10,min = 0.21),
+#'           c(.19,.1,.05),
+#'           runif(10,min=0.21),
+#'           c(.1,.1,.1,.1,.1))
+#'
+#' categories_test = c("kataegis" = 5,"omikli" = 2)
+#'
+#' detect_events(x = fdr_test,
+#'   sig_cutoff = 0.2,
+#'   event_categories =categories_test )
+detect_events <- function(x,sig_cutoff,event_categories){
+
   ct_mask = x <= sig_cutoff
   event_rle = rle(ct_mask)
-  event_rle$event = ifelse(event_rle$lengths >= event_cutoff & event_rle$values,
-                           yes = event_value,
-                           no=NA)
-  res = inverse_complex_rle(event_rle,column = "event")
-  return(res)
+
+  event_categories = event_categories[order(event_categories)]
+  events_out = rep(NA,length(event_rle$values))
+  for (i in seq_along(event_categories)){
+    event_name = names(event_categories)[i]
+    event_cutoff = event_categories[i]
+    events_out =  ifelse(event_rle$lengths >= event_cutoff & event_rle$values,
+                         yes = event_name,
+                         no=events_out)
+  }
+
+  event_rle$event = events_out
+  res_ev = inverse_complex_rle(event_rle,column = "event")
+  res_length = inverse_complex_rle(event_rle,column = "lengths")
+  return(list(events = res_ev,lengths = res_length))
 }
 
-# test = runif(100)
-# 
-# fdr_cutoff = 0.2
-# event_cutoff = 2
-# type_value = "kataegis"
-# detect_events(test,sig_cutoff = 0.2,event_cutoff = 2,event_value = "test")

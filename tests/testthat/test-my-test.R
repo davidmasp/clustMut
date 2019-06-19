@@ -85,3 +85,80 @@ test_that("edit distance", {
   testthat::expect_equal(compute_edit_distance(str2)[1,2],2)
   testthat::expect_equal(compute_edit_distance(str)[1,2],1.5)
 })
+
+
+test_that("event_calling", {
+
+  fdr_test =c(runif(10,min = 0.21),
+              c(.19,.1,.05),
+              runif(10,min=0.21),
+              c(.1,.1,.1,.1,.1))
+
+  categories_test = c("kataegis" = 5,"omikli" = 2)
+
+  expected_res = list(
+    c(
+      NA,
+      NA,
+      NA,
+      NA,
+      NA,
+      NA,
+      NA,
+      NA,
+      NA,
+      NA,
+      "omikli",
+      "omikli",
+      "omikli",
+      NA,
+      NA,
+      NA,
+      NA,
+      NA,
+      NA,
+      NA,
+      NA,
+      NA,
+      NA,
+      "kataegis",
+      "kataegis",
+      "kataegis",
+      "kataegis",
+      "kataegis"),
+    c(
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      3,
+      3,
+      3,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      5,
+      5,
+      5,
+      5,
+      5))
+
+  testthat::expect_equal(expected_res,
+                         detect_events(x = fdr_test,
+                                       sig_cutoff = 0.2,
+                                       event_categories =categories_test ))
+
+})
