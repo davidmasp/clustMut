@@ -65,6 +65,7 @@ detect_events_roberts <- function(vr,varname = "roberts_clust"){
 #'   event_categories =categories_test )
 detect_events <- function(x,sig_cutoff,event_categories){
 
+
   ct_mask = x <= sig_cutoff
   event_rle = rle(ct_mask)
 
@@ -77,10 +78,27 @@ detect_events <- function(x,sig_cutoff,event_categories){
                          yes = event_name,
                          no=events_out)
   }
+  ### random ids are important to then extract events afterwards
+  ### random ids should be enough, we can always resplit by sampleName
+  ### it's important to set the generator to FALSE to avoid giving a time
+  ### dependant value
+  ### I had a problem with uuids so that's why I am using radom ids which
+  ### apparently uses some kind of openssl generator which don' depedent
+  ### on the set.seed function. (is this ok?)
+  ### length(unique(ids::random_id(1000000,bytes = 10)))
+  ###  [1] 1000000
+  ###  very unlikely there will be 1M of events in a sample/chr combination
+  rid_vector = rep(NA,length(event_rle$values))
+  rid_in = ids::random_id(n = sum(event_rle$values),
+                           bytes = 10)
+  rid_vector[event_rle$values] = rid_in
+  event_rle$event_rid = rid_vector
 
   event_rle$event = events_out
   res_ev = inverse_complex_rle(event_rle,column = "event")
   res_length = inverse_complex_rle(event_rle,column = "lengths")
-  return(list(events = res_ev,lengths = res_length))
+  res_rid = inverse_complex_rle(event_rle,column = "event_rid")
+  return(list(events = res_ev,lengths = res_length,rid = res_rid))
 }
+
 

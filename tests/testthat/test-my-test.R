@@ -156,9 +156,11 @@ test_that("event_calling", {
       5,
       5))
 
-  testthat::expect_equal(expected_res,
-                         detect_events(x = fdr_test,
-                                       sig_cutoff = 0.2,
-                                       event_categories =categories_test ))
+  test_result =  detect_events(x = fdr_test,
+                               sig_cutoff = 0.2,
+                               event_categories =categories_test )
+
+  testthat::expect_equal(expected_res[[1]],test_result[[1]] )
+  testthat::expect_equal(expected_res[[2]],test_result[[2]] )
 
 })

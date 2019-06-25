@@ -26,5 +26,10 @@ test_that("helpers", {
 
   expect_equal(length(obj_gr),4)
 
+  # external testing
+  expect_equal(length(unique(ids::random_id(1000000,bytes = 10))),1000000)
+
+
+
 
 })
