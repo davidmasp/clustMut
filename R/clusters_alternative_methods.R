@@ -77,6 +77,7 @@ roberts_clusters <- function(vr,
 
   vr$event_type = events_res$events
   vr$event_muts = events_res$lengths
+  vr$rid = events_res$rid
 
   return(vr)
 }
@@ -233,6 +234,7 @@ custom_basic_clustering <- function(vr,
 
   vr$event_type = events_res$events
   vr$event_muts = events_res$lengths
+  vr$rid = events_res$rid
   return(vr)
 }
 
