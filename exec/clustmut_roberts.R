@@ -163,12 +163,13 @@ if (opt$verbose){
 
 
 if (interactive()){
+  opt$roberts_mode = TRUE
   opt$data= "tests_exec/data"
   opt$glob = "*_VR.rds"
   opt$recursive = TRUE
   opt$alignability_mask = "Y:/_LEGACY/mask/CRG_alignability/crg36AlignExtNoBlackRmvsh19_RngMask_savedInt=TRUE.bed"
 
-  opt$keepMSM = TRUE
+  opt$keepMSM = FALSE
   opt$keepVR = TRUE
   opt$mutlist = TRUE
   opt$keep_uncl = TRUE
@@ -288,6 +289,4 @@ if (opt$keepMSM){
   saveRDS(object = MSM_result,
           file = glue::glue("{opt$outuput_prefix}_roberts_MSM.rds"))
 }
-
-
 
