@@ -2,6 +2,16 @@
 
 
 
+roberts_clusters_master <- function(mode,...){
+  if (mode == "pairs"){
+    res = roberts_clusters_pairs(...)
+  } else {
+    res = roberts_clusters(...)
+  }
+  return(res)
+}
+
+
 #' Cluster binomial for pairs
 #'
 #'

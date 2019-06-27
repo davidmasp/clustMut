@@ -33,6 +33,13 @@ option_list = list(
     help = "Make the program look inside folders within the data folder "
   ),
   make_option(
+    c("-T","--pairs"),
+    action = "store_true",
+    dest = "roberts_mode",
+    default = FALSE,
+    help = "Use the pairs mode in the roberts method"
+  ),
+  make_option(
     c("-a", "--alignability_mask"),
     action = "store",
     type = 'character',
@@ -205,7 +212,8 @@ pb <- progress_bar$new(
 
 vr_res = purrr::map(dat,function(vr){
   pb$tick(tokens = list(sample = unique(sampleNames(vr))))
-  vr_res = roberts_clusters(
+  vr_res = roberts_clusters_master(
+    mode = opt$roberts_mode,
     vr = vr,
     delta = opt$delta,
     ce_cutoff = 10,
