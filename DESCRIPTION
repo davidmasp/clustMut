@@ -31,5 +31,7 @@ Imports:
     parallel,
     purrr,
     cli,
-    ids
+    ids,
+    viridis,
+    cowplot
 RoxygenNote: 6.0.1

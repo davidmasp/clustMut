@@ -39,7 +39,6 @@ plot_exp_list <- function(vr){
 
 plot_eedistances <- function(mdist,rdist,fdr,sample) {
   library(cowplot)
-  library(viridis)
   require(ggplot2)
 
   nclust = sum(fdr<0.2)
@@ -67,7 +66,7 @@ plot_eedistances <- function(mdist,rdist,fdr,sample) {
          y = "-log10(Observed distance to nearest)",
          title = sample,
          caption = caption_text)+
-    scale_color_viridis(option = "A",end = .9)
+    viridis::scale_color_viridis(option = "A",end = .9)
 
 
 
