@@ -1,6 +1,101 @@
 # ROBERTS ======================================================================
 
 
+
+#' Cluster binomial for pairs
+#'
+#'
+#' This function is an adaptations of the method in Roberts, S. A. et al. Molecular Cell (2012) to call clusterd mutations based only in pairs. Regions with local higher hypermutation than expected.
+#'
+#' WARNING: This method considers the MR constant in each sample.
+#'
+#' @param vr A VRanges object
+#' @param ce_cutoff Complex events cutoff, only last one will be kept
+#' @param G_percent Percentatge of the human genome used
+#' @param dbSNP a SNPLoc object that contains the appropiate dbSNP release
+#'
+#' @return
+#' @export
+#'
+#' @examples
+roberts_clusters_pairs <- function(vr,
+                             ce_cutoff = 10,
+                             G_percent = 1, # 0.01 per exomes?
+                             event_categories,
+                             dbSNP) {
+
+  # step 0: Unique sample assumption
+  stopifnot(length(unique(sampleNames(vr))) == 1)
+
+  stopifnot(!is.unsorted(vr)) # ???
+
+  # step 1: Total number of mutations
+  n = length(vr)
+
+  D = length(unique(sampleNames(vr))) #because we are asuming 1 sample
+  G = 3234830000
+  G = G * G_percent
+  pi = n / (D*G)
+
+  # step 2: filter dbSNP
+  if (!is.null(dbSNP)){
+    vr = roberts_filter_dbSNP(vr,dbSNP = dbSNP)
+  }
+
+  if (length(vr) == 0){
+    warning("No mutations left in sample");
+    return(vr)}
+
+  # step 3: Group complex mutations
+  vr = roberts_group_ce(vr = vr, ce_cutoff)
+
+  if (length(vr) == 0){
+    warning("No mutations left in sample");
+    return(vr)}
+
+  # step 4: get nearest pair
+  nearest_pair = GenomicRanges::distanceToNearest(vr)
+  dist = mcols(nearest_pair)$distance
+  test_binom = genomicHelpersDMP::binom_test(x = rep(2,length(nearest_pair)),
+                                             n = dist,
+                                             p = rep(pi,length(nearest_pair)))
+
+  test_binom$p.value.bonferroni = p.adjust(test_binom$p.value,
+                                           method = "bonferroni")
+
+  test_binom$p.value.fdr = p.adjust(test_binom$p.value,
+                                    method = "fdr")
+
+  # we set the pvalue NULL to 1, the mutations that don't have a pair
+  # will have a p value == 1
+  mDF = mcols(vr)
+  mDF$roberts_pairs_pval = 1
+  mDF$roberts_pairs_pval_bonf = 1
+  mDF$roberts_pairs_pval_fdr = 1
+
+  mDF[queryHits(nearest_pair),
+      c("roberts_pairs_pval",
+        "roberts_pairs_pval_bonf",
+        "roberts_pairs_pval_fdr")] = test_binom[,c("p.value",
+                                                   "p.value.bonferroni",
+                                                   "p.value.fdr")]
+  mcols(vr) = mDF
+
+  # call events for roberts
+  # bonferroni is the less inflated approach I think, the fdr is not
+  # corrected enough
+  events_res = detect_events(x = vr$roberts_pairs_pval_bonf,
+                             sig_cutoff = 0.05,
+                             event_categories = event_categories)
+
+  vr$event_type = events_res$events
+  vr$event_muts = events_res$lengths
+  vr$rid = events_res$rid
+
+  return(vr)
+}
+
+
 #' Cluster mutations Roberts 2012
 #'
 #' This functions implements the method in Roberts, S. A. et al. Molecular Cell (2012) to call clusterd mutations. Regions with local higher hypermutation than expected.
@@ -186,8 +281,6 @@ roberts_pvalue <- function(x, k, p){
 
 
 # NIKKLIEA ======================================================================
-
-
 custom_basic_clustering <- function(vr,
                                     IMD,
                                     nmuts,
