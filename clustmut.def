@@ -11,8 +11,10 @@ From: rocker/tidyverse:3.5.3
 %post
     R -e 'install.packages("vegan")'
     R -e 'install.packages("ggrepel")'
+    R -e 'install.packages("ids")'
     R -e 'install.packages("optparse")'
-    
+    R -e 'install.packages("viridis")'
+    R -e 'install.packages("cowplot")'    
     R -e 'install.packages("BiocManager")'
     R -e 'BiocManager::install("VariantAnnotation")'
     R -e 'BiocManager::install("GSEABase")'
