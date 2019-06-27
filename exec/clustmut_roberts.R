@@ -156,10 +156,10 @@ if (opt$verbose){
 
 
 if (interactive()){
-  opt$data= "~/data/MISC_MUTS/Chan_et_al_NG_2015/VR/"
+  opt$data= "tests_exec/data"
   opt$glob = "*_VR.rds"
   opt$recursive = TRUE
-  opt$alignability_mask = "~/data/CRG_alignability/hg19_ncbi/alignability_mask.bed"
+  opt$alignability_mask = "Y:/_LEGACY/mask/CRG_alignability/crg36AlignExtNoBlackRmvsh19_RngMask_savedInt=TRUE.bed"
 
   opt$keepMSM = TRUE
   opt$keepVR = TRUE
