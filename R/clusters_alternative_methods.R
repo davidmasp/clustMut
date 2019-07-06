@@ -5,8 +5,10 @@
 roberts_clusters_master <- function(mode,...){
   if (mode == "pairs"){
     res = roberts_clusters_pairs(...)
-  } else {
+  } else if (mode == "basic"){
     res = roberts_clusters(...)
+  } else {
+    stop("mode not found, check again")
   }
   return(res)
 }

@@ -173,6 +173,7 @@ if (interactive()){
   opt$keepVR = TRUE
   opt$mutlist = TRUE
   opt$keep_uncl = TRUE
+ # opt$pairs = TRUE
   opt$use_dbSNP = FALSE
 }
 
@@ -209,12 +210,13 @@ pb <- progress_bar$new(
   format = "Computing clusters by Roberts method, :sample , :percent eta: :eta",
   total = length(file_paths), clear = FALSE)
 
-
+# the argument is TRUE FALSE but it reads an string
+if (opt$roberts_mode){mode_pairs = "pairs"} else {mode_pairs = "basic"}
 
 vr_res = purrr::map(dat,function(vr){
   pb$tick(tokens = list(sample = unique(sampleNames(vr))))
   vr_res = roberts_clusters_master(
-    mode = opt$roberts_mode,
+    mode = mode_pairs,
     vr = vr,
     delta = opt$delta,
     ce_cutoff = 10,
