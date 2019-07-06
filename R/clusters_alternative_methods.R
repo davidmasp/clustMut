@@ -2,11 +2,27 @@
 
 
 
-roberts_clusters_master <- function(mode,...){
+roberts_clusters_master <- function(mode,vr,
+                                    delta = 10000,
+                                    ce_cutoff = 10,
+                                    G_percent = 1, # 0.01 per exomes?
+                                    pval_cutoff = 1e-4,
+                                    event_categories,
+                                    dbSNP){
   if (mode == "pairs"){
-    res = roberts_clusters_pairs(...)
+    res = roberts_clusters_pairs(vr = vr,
+                                 ce_cutoff = ce_cutoff,
+                                 G_percent = G_percent, # 0.01 per exomes?
+                                 event_categories = event_categories,
+                                 dbSNP = dbSNP)
   } else if (mode == "basic"){
-    res = roberts_clusters(...)
+    res = roberts_clusters(vr = vr,
+                           delta = delta,
+                           ce_cutoff = ce_cutoff,
+                           G_percent = G_percent, # 0.01 per exomes?
+                           pval_cutoff = pval_cutoff,
+                           event_categories = event_categories,
+                           dbSNP = dbSNP)
   } else {
     stop("mode not found, check again")
   }
