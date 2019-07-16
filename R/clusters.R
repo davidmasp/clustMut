@@ -267,7 +267,7 @@ clust_dist_sample <- function(vr,
   xp_dist = random_matrix[,rc]
   xp_dist = xp_dist[!is.na(xp_dist)]
   MDF$exp_dist = xp_dist
-  MDF$tp = sum(1- vr$fdr)
+  MDF$tp = sum(1- MDF$fdr)
 
   events_out = detect_events(x = fdr,
                 sig_cutoff = event_fdr,
