@@ -13,7 +13,9 @@
 
 # warning the context have to match the k of the one coming from RMut output
 # so for now -> 3!
-parse_randommut_vr <- function(dat,context=NULL,reference_set = c("C","A")){
+parse_randommut_vr <- function(dat,
+                               context=NULL,
+                               reference_set = c("C","A")){
 
   requireNamespace("dplyr", quietly = TRUE)
   requireNamespace("tidyselect", quietly = TRUE)
