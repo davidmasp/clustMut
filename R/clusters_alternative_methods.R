@@ -261,6 +261,15 @@ roberts_group_ce <- function(vr,ce_cutoff,remove = "first"){
 }
 
 roberts_filter_dbSNP <- function(vr,dbSNP){
+
+  sqlS = seqlevelsStyle(vr)
+
+  if (sqlS == "UCSC"){
+    seqlevelsStyle(vr) = "NCBI"
+  }
+
+
+
   snips = BSgenome::snpsByOverlaps(dbSNP,vr)
   ovrlaps = GenomicRanges::findOverlaps(query = snips,subject = vr)
   hitsindbSNP = S4Vectors::subjectHits(ovrlaps)
@@ -278,6 +287,10 @@ roberts_filter_dbSNP <- function(vr,dbSNP){
 
   per = scales::percent(1-(length(vr)/ol))
   warning(glue::glue("{per} mutations removed because present in dbSNP"))
+
+  if (sqlS == "UCSC"){
+    seqlevelsStyle(vr) = "UCSC"
+  }
 
   return(vr)
 }

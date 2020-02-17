@@ -192,7 +192,7 @@ if (!is.null(opt$events)){
 path = opt$data
 file_paths = fs::dir_ls(path,
                         glob = opt$glob,
-                        recursive = opt$recursive)
+                        recurse = opt$recursive)
 
 dat = VR_preprocessing(file_paths = file_paths,
                              pair_set = opt$pair_set,
