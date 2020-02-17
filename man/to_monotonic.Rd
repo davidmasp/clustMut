@@ -15,6 +15,9 @@ to_monotonic(x, max = 1, ascending = TRUE, ...)
 
 \item{...}{}
 }
+\value{
+
+}
 \description{
 Transform a vector to monotonic
 }

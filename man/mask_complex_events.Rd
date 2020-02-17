@@ -11,6 +11,9 @@ mask_complex_events(gr, cutoff = 1)
 
 \item{cutoff}{minimum distance to consider as a complex event}
 }
+\value{
+
+}
 \description{
 Mask complex events and unique mutations in a chromosome
 }

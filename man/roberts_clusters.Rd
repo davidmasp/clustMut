@@ -4,8 +4,15 @@
 \alias{roberts_clusters}
 \title{Cluster mutations Roberts 2012}
 \usage{
-roberts_clusters(vr, delta = 10000, ce_cutoff = 10, G_percent = 1,
-  pval_cutoff = 1e-04, dbSNP)
+roberts_clusters(
+  vr,
+  delta = 10000,
+  ce_cutoff = 10,
+  G_percent = 1,
+  pval_cutoff = 1e-04,
+  event_categories,
+  dbSNP
+)
 }
 \arguments{
 \item{vr}{A VRanges object}
@@ -19,6 +26,9 @@ roberts_clusters(vr, delta = 10000, ce_cutoff = 10, G_percent = 1,
 \item{pval_cutoff}{P value to decide}
 
 \item{dbSNP}{a SNPLoc object that contains the appropiate dbSNP release}
+}
+\value{
+
 }
 \description{
 This functions implements the method in Roberts, S. A. et al. Molecular Cell (2012) to call clusterd mutations. Regions with local higher hypermutation than expected.

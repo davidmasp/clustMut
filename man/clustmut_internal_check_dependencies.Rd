@@ -9,6 +9,9 @@ clustmut_internal_check_dependencies(deps)
 \arguments{
 \item{deps}{character vector with package names}
 }
+\value{
+
+}
 \description{
 Check dependencies
 }

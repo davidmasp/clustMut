@@ -22,9 +22,10 @@ Detect events from fdr vectors
 \examples{
 
 fdr_test =c(runif(10,min = 0.21),
-c(.19,.1,.05),
-runif(10,min=0.21),
-c(.1,.1,.1,.1,.1))
+          c(.19,.1,.05),
+          runif(10,min=0.21),
+          c(.1,.1,.1,.1,.1))
+
 categories_test = c("kataegis" = 5,"omikli" = 2)
 
 detect_events(x = fdr_test,

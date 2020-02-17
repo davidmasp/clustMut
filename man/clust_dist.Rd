@@ -4,8 +4,17 @@
 \alias{clust_dist}
 \title{Distance mutation clusters}
 \usage{
-clust_dist(vr, rand_df, ce_cutoff = 1, method = "fdr", n = 1,
-  dist_cutoff = NULL, split_factor = NULL)
+clust_dist(
+  vr,
+  rand_df,
+  ce_cutoff = 1,
+  method = "fdr",
+  n = 1,
+  dist_cutoff = NULL,
+  split_factor = NULL,
+  event_categories,
+  event_fdr
+)
 }
 \arguments{
 \item{vr}{A VRanges object with multiple samples (or just one)}
