@@ -34,4 +34,4 @@ Imports:
     ids,
     viridis,
     cowplot
-RoxygenNote: 6.0.1
+RoxygenNote: 7.0.0
