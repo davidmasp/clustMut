@@ -164,7 +164,7 @@ if (opt$verbose){
 
 if (interactive()){
   opt$roberts_mode = TRUE
-  opt$data= "tests_exec/data"
+  opt$data= "tmp_dir/"
   opt$glob = "*_VR.rds"
   opt$recursive = TRUE
   opt$alignability_mask = "Y:/_LEGACY/mask/CRG_alignability/crg36AlignExtNoBlackRmvsh19_RngMask_savedInt=TRUE.bed"
@@ -174,7 +174,7 @@ if (interactive()){
   opt$mutlist = TRUE
   opt$keep_uncl = TRUE
  # opt$pairs = TRUE
-  opt$use_dbSNP = FALSE
+  opt$use_dbSNP = TRUE
 }
 
 if (!is.null(opt$events)){

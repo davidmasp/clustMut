@@ -2,18 +2,22 @@
 % Please edit documentation in R/pairs.R
 \name{find_all_pairs}
 \alias{find_all_pairs}
-\title{Find pairs within a IMD range}
+\title{Find all pairs within a window length}
 \usage{
 find_all_pairs(vr, win_length)
 }
 \arguments{
 \item{vr}{a VRanges object}
 
-\item{win_length}{the IMD in which pairs will be found}
+\item{win_length}{the total window length where to find pairs}
 }
 \value{
-
+Returns a overlaps object with all the possible pairs. They are
+de-duplicated meaning that each lines represents only one pair of
+mutations.
 }
 \description{
-Find pairs within a IMD range
+It finds all the possible pairs of mutations which are found within a
+extended window from each mutation. The total window length
+is extended half upstream and half downstream.
 }

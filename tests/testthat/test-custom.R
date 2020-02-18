@@ -18,6 +18,8 @@ dat_vr = VRanges(
   alt = "A"
 )
 
+strand(dat_vr) = "+"
+
 context("pairs")
 test_that("pairs",{
   length(find_all_pairs(dat_vr,win_length = 50)) -> t1
