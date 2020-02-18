@@ -9,7 +9,7 @@
 #' @export
 #'
 #' @examples
-find_pairs_VR <- function(vr,win_length){
+find_all_pairs <- function(vr,win_length){
   dat_vr = vr
   win = win_length
   dat_ext = genomicHelpersDMP::extend(dat_vr,
@@ -22,8 +22,7 @@ find_pairs_VR <- function(vr,win_length){
   return(pairs)
 }
 
-
-find_pairs_VR2 <- function(vr,IMD){
+find_all_runs <- function(vr,IMD){
 
   get_custom_cluster_rle(vr = vr,
                          IMD = IMD,

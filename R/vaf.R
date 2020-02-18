@@ -384,7 +384,7 @@ local_vaflr_fdr <- function(vr,
 
     dneg = abs(log2(vaf1/vaf2))
 
-    pairs = dat %>% find_pairs_VR(pairs_size)
+    pairs = dat %>% find_all_pairs(pairs_size)
 
     if (length(pairs)==0){
       return(NULL)

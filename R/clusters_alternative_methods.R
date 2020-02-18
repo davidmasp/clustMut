@@ -173,7 +173,8 @@ roberts_clusters <- function(vr,
     return(vr)}
 
   # step 3: Group complex mutations
-  vr = roberts_group_ce(vr = vr, ce_cutoff)
+  # here the pairs are found as window lenght extension from each mutation.
+  vr = roberts_group_ce(vr = vr, ce_cutoff * 2)
 
   if (length(vr) == 0){
     warning("No mutations left in sample");
@@ -217,7 +218,7 @@ roberts_significance <- function(clusts,pval_cutoff){
 }
 
 roberts_find_clust <- function(vr, delta, p) {
-  clust_cand = find_pairs_VR2(vr, IMD = delta)
+  clust_cand = find_all_runs(vr, IMD = delta)
 
   stopifnot(all(clust_cand$mask))
 
@@ -240,7 +241,7 @@ roberts_find_clust <- function(vr, delta, p) {
 }
 
 roberts_group_ce <- function(vr,ce_cutoff,remove = "first"){
-  pairs = find_pairs_VR(vr,ce_cutoff)
+  pairs = find_all_pairs(vr,ce_cutoff)
 
   if (length(pairs)==0){
     return(vr)
