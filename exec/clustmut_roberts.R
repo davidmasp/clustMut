@@ -163,7 +163,7 @@ if (opt$verbose){
 
 
 if (interactive()){
-  opt$roberts_mode = TRUE
+  opt$roberts_mode = FALSE
   opt$data= "tmp_dir/"
   opt$glob = "*_VR.rds"
   opt$recursive = TRUE

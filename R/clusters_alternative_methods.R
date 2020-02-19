@@ -55,6 +55,14 @@ roberts_clusters_pairs <- function(vr,
   # step 0: Unique sample assumption
   stopifnot(length(unique(sampleNames(vr))) == 1)
 
+
+  ol = length(vr)
+  vr = removeBiallelic(vr)
+  el = length(vr)
+  if (ol != el){
+    warning(glue::glue("Biallelic positions removed, total {scales::percent(el/ol)}"))
+  }
+
   stopifnot(!is.unsorted(vr)) # ???
 
   # step 1: Total number of mutations
@@ -149,9 +157,17 @@ roberts_clusters <- function(vr,
                              event_categories,
                              dbSNP) {
 
-  #browser()
+
+
   # step 0: Unique sample assumption
   stopifnot(length(unique(sampleNames(vr))) == 1)
+
+  ol = length(vr)
+  vr = removeBiallelic(vr)
+  el = length(vr)
+  if (ol != el){
+    warning(glue::glue("Biallelic positions removed, total {scales::percent(el/ol)}"))
+  }
 
   stopifnot(!is.unsorted(vr)) # ???
 
@@ -261,6 +277,7 @@ roberts_group_ce <- function(vr,ce_cutoff,remove = "first"){
   return(vr)
 }
 
+
 roberts_filter_dbSNP <- function(vr,dbSNP){
 
   sqlS = seqlevelsStyle(vr)
@@ -269,12 +286,10 @@ roberts_filter_dbSNP <- function(vr,dbSNP){
     seqlevelsStyle(vr) = "NCBI"
   }
 
-
-
   snips = BSgenome::snpsByOverlaps(dbSNP,vr)
   ovrlaps = GenomicRanges::findOverlaps(query = snips,subject = vr)
   hitsindbSNP = S4Vectors::subjectHits(ovrlaps)
-  alleles = genomicHelpersDMP::dna_codes[as.character(snips$alleles_as_ambig)]
+  alleles = helperMut::dna_codes[as.character(snips$alleles_as_ambig)]
 
   mask_alleles = unlist(purrr::map2(alleles,
                              hitsindbSNP,
@@ -396,4 +411,16 @@ get_custom_cluster_rle <- function(vr,nearest,IMD,nmuts) {
 }
 
 
+
+
+
+removeBiallelic <- function(vr) {
+  stopifnot(length(unique(as.character(sampleNames(vr)))) == 1)
+  findOverlaps(vr,vr) -> test
+  same_pos = queryHits(test[queryHits(test) != subjectHits(test)])
+  if (length(same_pos) > 0){
+    vr = vr[-same_pos]
+  }
+  vr
+}
 
