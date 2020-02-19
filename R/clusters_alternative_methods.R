@@ -221,8 +221,12 @@ roberts_clusters <- function(vr,
 }
 
 roberts_significance <- function(clusts,pval_cutoff){
-
+  clusts = clusts[!is.na(clusts$pval),]
+  clusts = clusts[clusts$pval < pval_cutoff,]
   clusts_lol = as.list(clusts[clusts$pval < pval_cutoff,])
+
+  stopifnot(all(!is.na(clusts_lol[["from"]])))
+
   values_idx = purrr::pmap(clusts_lol,
                             function(from,to,mask,pval){
                               return(from:to)
