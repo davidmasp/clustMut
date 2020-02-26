@@ -371,7 +371,9 @@ custom_basic_clustering <- function(vr,
   clust_mask_res = as(clust_mask_rle,"vector")
 
   vr$custom_clust = FALSE
-  vr[clust_mask_res]$custom_clust = TRUE
+  if (any(clust_mask_res)){
+    vr[clust_mask_res]$custom_clust = TRUE
+  }
 
   # call events for basic
   pvals = as.numeric(!vr$custom_clust) # important to reverse the mask

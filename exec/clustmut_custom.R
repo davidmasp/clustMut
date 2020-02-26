@@ -74,14 +74,14 @@ option_list = list(
     c("-I", "--IMD"),
     action = "store",
     dest = "imd",
-    default = 10000,
+    default = 1000,
     help = "Cluster length"
   ),
   make_option(
     c("-N", "--nmuts"),
     action = "store",
     dest = "nmuts",
-    default = 6,
+    default = 5,
     help = "Number of mutations in a cluster"
   ),
   make_option(
@@ -112,7 +112,8 @@ option_list = list(
   make_option(
     c("-u", "--keep_uncl"),
     action = "store_true",
-    dest = "unclustkeep",default = FALSE,
+    dest = "unclustkeep",
+    default = FALSE,
     help = "Keep also a unclustered MSM in the object file "
   ),
   make_option(
@@ -154,15 +155,16 @@ if (opt$verbose){
 
 
 if (interactive()){
-  opt$data= "~/data/TCGA_MUTS/TCGA_VR/LGG/"
+  opt$data= "tmp_dir/"
   opt$glob = "*_VR.rds"
+  opt$outuput_prefix = "TCGA-02-2483-01A-01D-1494-08"
   opt$recursive = TRUE
-  opt$alignability_mask = "~/data/CRG_alignability/hg19/LEGACY/crg36AlignExtNoBlackRmvsh19_RngMask_savedInt=TRUE.bed"
+  #opt$alignability_mask = "~/data/CRG_alignability/hg19/LEGACY/crg36AlignExtNoBlackRmvsh19_RngMask_savedInt=TRUE.bed"
 
-  opt$keepMSM = TRUE
+  opt$keepMSM = FALSE
   opt$keepVR = TRUE
   opt$mutlist = TRUE
-  opt$keep_uncl = TRUE
+  opt$keep_uncl = FALSE
 }
 
 
@@ -181,7 +183,7 @@ if (!is.null(opt$events)){
 path = opt$data
 file_paths = fs::dir_ls(path,
                         glob = opt$glob,
-                        recursive = opt$recursive)
+                        recurse = opt$recursive)
 
 dat = VR_preprocessing(file_paths = file_paths,
                        pair_set = opt$pair_set,
