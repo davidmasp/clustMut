@@ -9,6 +9,9 @@ compute_distances(x, k = 1, use = dplyr::lag)
 \arguments{
 \item{k}{}
 }
+\value{
+
+}
 \description{
 Get the distance between a particular mutaion and the next or to the previous.
 }

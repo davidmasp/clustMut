@@ -1,0 +1,47 @@
+BootStrap: docker
+From: rocker/tidyverse:3.5.3
+
+%environment
+    PATH="/clustmut_bin:$PATH"
+
+%labels
+    Maintainer David Mas-Ponte <david.mas@irbbarcelona.org>
+    Version v0.0.1
+
+%post
+    R -e 'install.packages("vegan")'
+    R -e 'install.packages("ggrepel")'
+    R -e 'install.packages("ids")'
+    R -e 'install.packages("optparse")'
+    R -e 'install.packages("viridis")'
+    R -e 'install.packages("cowplot")'
+    R -e 'install.packages("BiocManager")'
+    R -e 'BiocManager::install("VariantAnnotation")'
+    R -e 'BiocManager::install("GSEABase")'
+    R -e 'BiocManager::install("org.Hs.eg.db")'
+
+    git clone http://fsupeksvr.irbbarcelona.pcb.ub.es/gitlab/dmas/genomicHelpersDMP.git genomicHelpersDMP_src
+
+    cd genomicHelpersDMP_src
+    R CMD INSTALL --no-multiarch --with-keep.source .
+
+    cd /
+
+    git clone http://fsupeksvr.irbbarcelona.pcb.ub.es/gitlab/dmas/clustMut.git clustMut_src
+    cd clustMut_src
+    git checkout dev
+    R CMD INSTALL --no-multiarch --with-keep.source .
+
+    cp clustmut /bin/clustmut
+
+
+
+%help
+    Singularity definition to install clustmut version DEV.
+
+%runscript
+    echo "Container was created $NOW"
+    echo "Arguments received: $*"
+    exec echo "$@"
+
+

@@ -1,7 +1,7 @@
 Package: clustMut
 Type: Package
 Title: Detect Clustered Mutation in Somatic Mutations Datasets
-Version: 0.1.0
+Version: 0.0.1
 Author: David Mas-Ponte
 Maintainer: David Mas-Ponte <david.mas@irbbarcelona.org>
 Description: More about what it does (maybe more than one line)
@@ -10,18 +10,27 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Suggests: 
-    testthat,
-    dplyr,
-    tidyselect,
-    parallel,
-    purrr,
-    broom
+    testthat
 Imports: 
-    GenomicRanges,
-    localFDR,
+    VariantAnnotation,
     dplyr,
+    tidyr,
     tidyselect,
     magrittr,
     purrr,
-    broom
-RoxygenNote: 6.0.1
+    broom,
+    stringr,
+    Biostrings,
+    glue,
+    GenomicRanges,
+    broom,
+    scales,
+    readr,
+    tidyselect,
+    parallel,
+    purrr,
+    cli,
+    ids,
+    viridis,
+    helperMut
+RoxygenNote: 7.0.0

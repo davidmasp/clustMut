@@ -1,3 +1,12 @@
 exportPattern("^[[:alpha:]]+")
 importFrom(magrittr,"%>%")
 importFrom(magrittr,"%<>%")
+import(VariantAnnotation)
+
+
+import(methods)
+import(BiocGenerics)
+import(S4Vectors)
+import(IRanges)
+import(GenomeInfoDb)
+import(GenomicRanges)

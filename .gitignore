@@ -12,3 +12,20 @@ sandbox_vaf.*
 # plots
 *.png
 *.pdf
+
+# folders
+00_LEGACY
+doc
+tests_exec/data
+
+# data
+*.rds
+*.txt
+
+#slurm output
+tests_exec/.slurm_*.out
+
+# test files
+.chcksum_*.txt
+*.simg
+

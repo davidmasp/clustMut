@@ -11,30 +11,6 @@
 
 
 ## VAF general ====================
-# this functions are used in the clean.R script, don't remove
-
-#' Compute VAF
-#'
-#' @param alt_reads reads of the alternative allele, note that this definition may mean different things.
-#' @param total_reads total number of reads
-#' @param method a character string indicating which VAF method should be used. One of 'symmetric', 'reduction' or 'simple' (default)
-#'
-#' @return
-#' @export
-#'
-#' @examples
-compute_VAF <- function(alt_reads,total_reads,method = "simple"){
-  VAF_vec = alt_reads/total_reads
-  if(method == "symmetric"){
-    VAF_vec[VAF_vec > 0.5] = 1 -VAF_vec[VAF_vec>0.5]
-  } else if (method == "reduction") {
-    VAF_vec[VAF_vec > .5] = ">.5" # SELF NOTE! improve this #CAREFULL
-  } else if (method =="simple"){
-    VAF_vec = VAF_vec
-  } else {
-    stop("Method not yet implemented. Available methods 'symmetric', 'reduction' and 'simple'")
-  }
-}
 
 
 compute_vafLR <- function(vaf1,vaf2){
@@ -363,3 +339,125 @@ lm_bin_vaflr <- function(vaflr,
 
   return(res)
 }
+
+
+
+# VAF per mutation ======================================
+
+
+#' Detect clusters using per mutation VAF fdr
+#'
+#' @param vr A VRanges object with somatic mutations
+#' @param simulation_size_input The number of simulated VAFs to generate for the expected and idealized distribution
+#' @param pairs_size The lenght (in bp) used to find possible pairs of mutations.
+#'
+#' @return A VRanges object with added columns (n and vaf_fdr_median)
+#'
+#' @export
+#'
+#' @examples
+local_vaflr_fdr <- function(vr,
+                            simulation_size_input,
+                            pairs_size = 10000) {
+
+  stopifnot(requireNamespace("VariantAnnotation",quietly = TRUE))
+  stopifnot(requireNamespace("purrr",quietly = TRUE))
+  stopifnot(requireNamespace("dplyr",quietly = TRUE))
+
+  stopifnot(is(vr,"VRanges"))
+
+  # single sample assumption
+  stopifnot(length(unique(sampleNames(vr))) == 1)
+
+  dat = vr
+
+  dat$mutid = glue::glue("{seqnames(dat)}_{start(dat)}_{alt(dat)}_{end(dat)}")
+  dat$RL = dat$RR + dat$AR
+
+  dat_split = dat %>% base::split(seqnames(dat))
+
+  nclust = dat_split %>% purrr::map_df(function(dat){
+    simulation_size = min(simulation_size_input,length(dat))
+
+    vaf1 = sample(dat$VAF,size = simulation_size)
+    vaf2 = sample(dat$VAF,size = simulation_size)
+
+    dneg = abs(log2(vaf1/vaf2))
+
+    pairs = dat %>% find_all_pairs(pairs_size)
+
+    if (length(pairs)==0){
+      return(NULL)
+    }
+
+    vaf1 = dat[queryHits(pairs)]$VAF
+    vaf2 = dat[subjectHits(pairs)]$VAF
+
+    RL1 = dat[queryHits(pairs)]$RL
+    RL2 = dat[subjectHits(pairs)]$RL
+
+    dist = start(dat[subjectHits(pairs)]) - start(dat[queryHits(pairs)])
+
+    dpos = 1:length(vaf1) %>% purrr::map(function(i){
+
+      vaf_average = mean(vaf1[i],vaf2[i])
+      shared_reads = max(((50 - dist[i])/(50 + dist[i])),0) # careful here!
+
+      shared_size = round(simulation_size * shared_reads)
+      same_reads = double(shared_size)
+      new_simulation_size = simulation_size - shared_size
+
+      vaf_simulated_1 = stats::rbinom(n = new_simulation_size,
+                                      size = RL1[i],
+                                      prob = vaf_average) / RL1[i]
+      vaf_simulated_2 = stats::rbinom(n = new_simulation_size,
+                                      size = RL2[i],
+                                      prob = vaf_average) / RL2[i]
+
+      vaf_simulated_LR = abs(log2(vaf_simulated_1/vaf_simulated_2))
+
+      res = c(vaf_simulated_LR,same_reads)
+
+      return(res)
+    })
+
+    neg = dneg %>% cut(c(seq(0,0.9,by = 0.1),Inf),include.lowest = T) %>%
+      table
+
+    vaflr = abs(log2(vaf1/vaf2))
+
+    bins = vaflr %>%
+      cut(c(seq(0,0.9,by = 0.1),Inf),include.lowest = T)
+
+    stopifnot(length(bins) == length(dpos))
+
+    fdrs = 1:length(bins) %>% purrr::map_dbl(function(i){
+
+      pos = dpos[[i]] %>% cut(c(seq(0,0.9,by = 0.1),Inf),
+                              include.lowest = TRUE) %>% table
+
+      fdr = neg[bins[i]]/(pos[bins[i]] + neg[bins[i]])
+    })
+
+    pairs_df = as.data.frame(pairs)
+    pairs_df$mut1 = dat[pairs_df$queryHits]$mutid
+    pairs_df$mut2 = dat[pairs_df$subjectHits]$mutid
+    pairs_df$fdr = fdrs
+    pairs_df$dist = dist
+    return(pairs_df)
+  })
+
+  fdrsdf = data.frame(mutid = c(nclust$mut1,nclust$mut2),fdr = c(nclust$fdr,nclust$fdr))
+  fdrsdf = fdrsdf %>%
+    dplyr::group_by(mutid) %>%
+    dplyr::summarise(n = n(), fdr = median(fdr))
+
+  mcols(dat) = mcols(dat) %>% as.data.frame() %>%
+    dplyr::full_join(fdrsdf,by = "mutid")
+
+  # this is per sample so I can do this
+  dat$tp = sum(1-fdrsdf$fdr,na.rm = TRUE)
+  return(dat)
+
+}
+

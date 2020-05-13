@@ -11,16 +11,54 @@
 ###############################################################################
 
 
+# warning the context have to match the k of the one coming from RMut output
+# so for now -> 3!
+parse_randommut_vr <- function(dat,
+                               context=NULL,
+                               reference_set = c("C","A")){
 
-# Some useful keyboard shortcuts for package authoring:
-#
-#   Build and Reload Package:  'Ctrl + Shift + B'
-#   Check Package:             'Ctrl + Shift + E'
-#   Test Package:              'Ctrl + Shift + T'
+  requireNamespace("dplyr", quietly = TRUE)
+  requireNamespace("tidyselect", quietly = TRUE)
+  # suppressPackageStartupMessages(library(VariantAnnotation))
+  # should be solved after issue #26
 
-hello <- function() {
-  print("Hello, world!")
+  if (!is.null(context)){
+    rev_ctx = as.character(Biostrings::reverseComplement(DNAStringSet(reference_set)))
+    ctx_in = c(make_set(x = context,simplify = T),
+               make_set(x = context,simplify = T,simplify_set = rev_ctx))
+
+    sep_pos = nchar(context) - 1
+    sep = stringr::str_sub(context,start = sep_pos,sep_pos)
+    mut_types = paste(dat$ctx,dat$alt,sep = sep)
+    ol = nrow(dat)
+    dat = dat[mut_types %in% ctx_in,]
+    per = scales::percent(1 - (nrow(dat)/ol))
+    warning(glue::glue("{per} of mutations removed due to context filter"))
+  }
+
+  dat_vr = VRanges(seqnames = dat$chr,
+                   ranges = IRanges(start = dat$end,
+                                    end = dat$end),
+                   ref = dat$ref,
+                   alt = dat$alt,
+                   sampleNames = dat$sample
+                   )
+
+  dat_vr$ctx = dat$ctx
+
+  rand_df = dat %>% dplyr::select(tidyselect::matches("R[0-9]+"))
+  meta_df = dat %>% dplyr::select(ctx)
+  mcols(dat_vr) = meta_df
+
+  if (nrow(rand_df) != length(dat_vr)) stop("kjdhfkhds")
+
+
+  res = list(VR=dat_vr,
+             RAND=rand_df)
+
+  return(res)
 }
+
 
 
 # dat = readr::read_tsv(path)
@@ -49,16 +87,39 @@ parse_randommut_out <- function(dat){
 }
 
 
-mask_complex_events <- function(gr){
+#' Mask complex events and unique mutations in a chromosome
+#'
+#' @param gr a VRanges object (unisample)
+#' @param cutoff minimum distance to consider as a complex event
+#'
+#' @return
+#' @export
+#'
+#' @examples
+mask_complex_events <- function(gr, cutoff = 1) {
   #### unique sample assumtion
-  stopifnot(length(unique(gr$sample)) == 1 )
+  if (is(gr, "VRanges")) {
+    stopifnot(length(unique(VariantAnnotation::sampleNames(gr))) == 1)
+
+  } else if ("sample" %in% colnames(mcols(gr))) {
+    stopifnot(length(unique(gr$sample)) == 1)
+  } else {
+    warning("Format not identified, check samples")
+  }
+
   ndist = distanceToNearest(gr)
   idx = queryHits(ndist)
-  ce_mask = !logical(length = length(gr)) # this also removes mutations that are unique in a particular chromosome
-  ce_mask[idx] = mcols(ndist)$distance == 0
-  warning(glue::glue("{scales::percent(sum(ce_mask) / length(gr))} mutations removed as complex events."))
+  # this also removes mutations that are unique in a particular chromosome
+  ce_mask = !logical(length = length(gr))
+  ce_mask[idx] = mcols(ndist)$distance < cutoff
+  warning(
+    glue::glue(
+      "{scales::percent(sum(ce_mask) / length(gr))} mutations removed as complex events."
+    )
+  )
   return(ce_mask)
 }
+
 
 binom_test <- function(x,n,p,...){
   if (!all(c(requireNamespace("broom", quietly = TRUE),
@@ -74,138 +135,78 @@ binom_test <- function(x,n,p,...){
 
 
 unlist_GR_base_list <- function(x){
-  #browser()
-  master_gr = x[[1]]
-  for (i in 2:length(x)){
-    master_gr = c(master_gr,x[[i]])
+
+  names(x) = NULL
+  ol = length(x)
+
+  # be explicit when removing things.
+  x = purrr::keep(x,~ !is.null(.))
+  if (length(x) < ol){
+    warning("Elements in vr list discarded due to NULL")
   }
+
+  # mrge elements in the list.
+  master_gr = do.call("c",x)
 
   return(master_gr)
 }
 
 
 
-
-category_plot <- function(dat,category,values){
-  library(cowplot)
-  library(magrittr)
-  library(purrr)
-  library(dplyr)
-  library(rlang)
-  library(broom)
-  requireNamespace("glue")
-
-
-  fact = category
-
-  dat[,fact] = as.factor(dat[,fact])
-  val = values
-
-  base_row = ggplot(data = dat,aes_string(x = fact)) +
-    geom_bar(fill=NA,color="black") +
-    scale_y_continuous(
-      expand = c(0, 0),
-      limits = c(0, NA),
-      breaks = scales::pretty_breaks(n = 3)
-    )
-
-  boxplot = ggplot(data = dat,aes_string(x = fact,y=val)) +
-    geom_violin(linetype="dashed") +
-    geom_boxplot(fill = NA,color="darkred",width = 0.1) +
-    theme(axis.line.x = element_blank(),
-          axis.title.x = element_blank(),
-          axis.text.x = element_blank(),
-          axis.ticks.x = element_blank())
+VR_preprocessing <- function(file_paths,
+                             pair_set,
+                             alignability_mask){
+  # read the filter
+  if (!is.null(alignability_mask)){
+    alignability_bed = rtracklayer::import.bed(alignability_mask)
+    sq_st = seqlevelsStyle(alignability_bed)
+  }
 
 
-  lev_factor = levels(dat[,fact])
+  library(progress)
+  pb <- progress_bar$new(
+    format = "Reading files :percent eta: :eta",
+    total = length(file_paths), clear = FALSE)
 
-  val_factor = dat %>% split(.[,fact]) %>% map(pull,val)
+  dat_list = purrr::map(file_paths,function(x){
 
-  res_df = data.frame()
+    dat = readRDS(x)
+    original = length(dat)
 
-  done_comp = c()
+    # apparently this happens in ICGC
+    mask = (ref(dat) == alt(dat))
+    dat = dat[!mask]
 
-  for (i in lev_factor){
-    for (j in lev_factor){
-      test = wilcox.test(val_factor[[i]],val_factor[[j]])
-      df = broom::tidy(test)
-      df$v1 = i
-      df$v2 = j
+    # check for duplicates
+    mutid = paste(seqnames(dat),start(dat),sampleNames(dat),alt(dat),sep = ":")
+    mask_duplicated = duplicated(mutid)
+    dat = dat[!mask_duplicated]
 
-      if (glue::glue("{j}vs{i}") %in% done_comp){
-        next()
-      } else {
-        done_comp = c(done_comp,glue::glue("{i}vs{j}"))
-      }
+    # remove bases outside the predefined set
+    ref_in = helperMut::dna_codes[[pair_set]]
+    mask=ref(dat) %in% ref_in
+    dat = dat[mask]
 
-      res_df = rbind(res_df,df)
+    # I check if alignability filter is set
+    if (!is.null(alignability_mask)){
+      stopifnot(sq_st == seqlevelsStyle(dat))
+      # remove chromosomes out of the bed file
+      dat = dat[seqnames(dat) %in% seqnames(alignability_bed)]
+      ovr = GenomicRanges::findOverlaps(query = dat,subject = alignability_bed)
+      # we keep the mutations that are included in the bed file !!!
+      dat = dat[S4Vectors::queryHits(ovr),]
     }
-  }
 
-  res_df$v1 = factor(res_df$v1,levels = levels(dat[,fact]))
-  res_df$v2 = factor(res_df$v2,levels = levels(dat[,fact]))
+    after_filter = length(dat)
+    per = (1 - (after_filter/original)) %>% scales::percent()
 
-  plabs = symnum(
-    res_df$p.value,
-    corr = FALSE,
-    na = FALSE,
-    cutpoints = c(0, 0.001, 0.01, 0.05, 0.1, 1),
-    symbols = c("***", "**", "*", ".", "n.s.")
-  )
-  plabs_legend = attr(plabs,"legend")
-  res_df$pvallabs=  plabs %>% as.character()
+    print(glue::glue("{per} mutations discarded in sample {x}."))
 
+    pb$tick()
 
-  sigheatmap = res_df %>% ggplot(aes(
-    x = v1,
-    y = v2,
-    fill = -log10(p.value),
-    label = pvallabs
-  )) +
-    geom_tile(alpha=0.2,color = "black") +
-    scale_fill_gradient2(high = "darkred",mid = "white",low = "blue") +
-    geom_text() +
-    theme(
-      axis.title.x = element_blank(),
-      axis.line.x = element_blank(),
-      axis.ticks.x = element_blank(),
-      legend.position = "none",
-      axis.line.y = element_blank(),
-      axis.title.y = element_blank(),
-      axis.ticks.y = element_blank()
-    )
-
-  theme_set(theme_cowplot(font_size = 8))
-
-  fp = plot_grid(
-    sigheatmap + labs(caption = glue::glue("Two-sided Mann-Whitney test:  {plabs_legend}")),
-    boxplot,
-    base_row,
-    rel_heights = c(.2, .6, .2),
-    ncol = 1,
-    align = "v"
-  )
-
-  return(fp)
-
+    return(dat)
+  })
+  return(dat_list )
 }
 
-multi_values_plot <- function(dat,values,category){
-  plot_list = list()
-
-  for (i in values){
-    #browser()
-    plot_list[[i]] = category_plot(dat,
-                                   category = category,
-                                   values = i)
-  }
-
-  fp =  plot_grid(nrow = 1,plotlist = plot_list,labels = "AUTO")
-
-
-  return(fp)
-
-
-}
 
