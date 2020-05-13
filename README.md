@@ -26,7 +26,7 @@ and a mutation stratification list to account for subclonal frequency.
 In order to install the package use:
 
 ``` r
-remotes::install_github("davidmasp/clustMut@develop")
+remotes::install_github("davidmasp/clustMut@dev")
 ```
 
 You need to first install the
