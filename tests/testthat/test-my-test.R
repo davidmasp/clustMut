@@ -66,25 +66,25 @@ test_that("distance tabl 2", {
 })
 
 
-test_that("edit distance", {
-  str3 = c("TATATAGC",
-           "CTATATAG")
-  str2 = c(
-    "TCGTC>T",
-    "TCCTC>G",
-    "AAAAA>G"
-  )
-
-  str = c(
-    "TCGTC>T",
-    "TCCTC>C",
-    "AAAAA>G"
-  )
-
-  testthat::expect_equal(compute_edit_distance(str3)[1,2],7)
-  testthat::expect_equal(compute_edit_distance(str2)[1,2],2)
-  testthat::expect_equal(compute_edit_distance(str)[1,2],1.5)
-})
+# test_that("edit distance", {
+#   str3 = c("TATATAGC",
+#            "CTATATAG")
+#   str2 = c(
+#     "TCGTC>T",
+#     "TCCTC>G",
+#     "AAAAA>G"
+#   )
+#
+#   str = c(
+#     "TCGTC>T",
+#     "TCCTC>C",
+#     "AAAAA>G"
+#   )
+#
+#   testthat::expect_equal(compute_edit_distance(str3)[1,2],7)
+#   testthat::expect_equal(compute_edit_distance(str2)[1,2],2)
+#   testthat::expect_equal(compute_edit_distance(str)[1,2],1.5)
+# })
 
 
 test_that("event_calling", {

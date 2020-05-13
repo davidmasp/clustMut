@@ -13,6 +13,9 @@ compute_m_distance(x, k = 1, use = min)
 
 \item{use}{function to select appropiate adjacent mutation (min by default)}
 }
+\value{
+
+}
 \description{
 Wrapper of compute_distances
 Get the distance between each mutation and the closest adjacent one.

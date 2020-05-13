@@ -15,6 +15,9 @@ compute_distances_splited_tbl(x, f, k = 1)
 
 \item{no_cores}{if null normal execution, if integer, parallel mode is triggered with the number of cores specified.}
 }
+\value{
+
+}
 \description{
 Compute minimum distance at each column of the data frame.
 }

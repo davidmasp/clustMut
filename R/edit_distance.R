@@ -79,7 +79,7 @@ edit_distance_fdr <- function(vr,
         diag(precomp_adist)=NA # this are the withitself values.
 
         dist= GenomicRanges::distanceToNearest(y)
-        pairs = y %>% find_pairs_VR(pairs_size)
+        pairs = y %>% find_all_pairs(pairs_size)
 
         if (length(pairs)==0){
           return(NULL)

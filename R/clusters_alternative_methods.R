@@ -55,6 +55,14 @@ roberts_clusters_pairs <- function(vr,
   # step 0: Unique sample assumption
   stopifnot(length(unique(sampleNames(vr))) == 1)
 
+
+  ol = length(vr)
+  vr = removeBiallelic(vr)
+  el = length(vr)
+  if (ol != el){
+    warning(glue::glue("Biallelic positions removed, total {scales::percent(el/ol)}"))
+  }
+
   stopifnot(!is.unsorted(vr)) # ???
 
   # step 1: Total number of mutations
@@ -149,9 +157,17 @@ roberts_clusters <- function(vr,
                              event_categories,
                              dbSNP) {
 
-  #browser()
+
+
   # step 0: Unique sample assumption
   stopifnot(length(unique(sampleNames(vr))) == 1)
+
+  ol = length(vr)
+  vr = removeBiallelic(vr)
+  el = length(vr)
+  if (ol != el){
+    warning(glue::glue("Biallelic positions removed, total {scales::percent(el/ol)}"))
+  }
 
   stopifnot(!is.unsorted(vr)) # ???
 
@@ -173,7 +189,8 @@ roberts_clusters <- function(vr,
     return(vr)}
 
   # step 3: Group complex mutations
-  vr = roberts_group_ce(vr = vr, ce_cutoff)
+  # here the pairs are found as window lenght extension from each mutation.
+  vr = roberts_group_ce(vr = vr, ce_cutoff * 2)
 
   if (length(vr) == 0){
     warning("No mutations left in sample");
@@ -184,13 +201,11 @@ roberts_clusters <- function(vr,
   clusters = roberts_find_clust(vr = vr,delta = delta,p=pi)
 
   # step 5: Apply significance threshold
-  idx = roberts_significance(clusts = clusters,
-                                pval_cutoff = pval_cutoff )
+  idx = roberts_significance(clusts = clusters,pval_cutoff = pval_cutoff )
   vr$roberts_clust = FALSE
   if (length(idx) > 0){
     vr[idx]$roberts_clust = TRUE
   }
-
 
   # call events for roberts
   pvals = as.numeric(!vr$roberts_clust) # important to reverse the mask
@@ -206,11 +221,14 @@ roberts_clusters <- function(vr,
 }
 
 roberts_significance <- function(clusts,pval_cutoff){
-  #browser()
-  clusts = clusts[mcols(clusts)$pval < pval_cutoff]
-  values_idx = purrr::map2( S4Vectors::queryHits(clusts),
-                            S4Vectors::subjectHits(clusts),
-                            function(from,to){
+  clusts = clusts[!is.na(clusts$pval),]
+  clusts = clusts[clusts$pval < pval_cutoff,]
+  clusts_lol = as.list(clusts[clusts$pval < pval_cutoff,])
+
+  stopifnot(all(!is.na(clusts_lol[["from"]])))
+
+  values_idx = purrr::pmap(clusts_lol,
+                            function(from,to,mask,pval){
                               return(from:to)
                               })
 
@@ -220,10 +238,14 @@ roberts_significance <- function(clusts,pval_cutoff){
 }
 
 roberts_find_clust <- function(vr, delta, p) {
-  clust_cand = find_pairs_VR(vr, win_length = delta)
-  pvals = purrr::map2_dbl(S4Vectors::queryHits(clust_cand),
-                          S4Vectors::subjectHits(clust_cand),
-                          function(from, to) {
+  clust_cand = find_all_runs(vr, IMD = delta)
+
+  stopifnot(all(clust_cand$mask))
+
+  lol = as.list(clust_cand)
+
+  pvals = purrr::pmap_dbl(lol,
+                          function(from, to,mask) {
                             x = start(vr[to]) - start(vr[from]) + 1
                             # because VR 1-based
                             k = length(vr[from:to])
@@ -232,14 +254,14 @@ roberts_find_clust <- function(vr, delta, p) {
                             return(pval)
                           })
 
-  mcols(clust_cand)$pval = pvals
+  clust_cand$pval = pvals
 
   return(clust_cand)
 
 }
 
 roberts_group_ce <- function(vr,ce_cutoff,remove = "first"){
-  pairs = find_pairs_VR(vr,ce_cutoff)
+  pairs = find_all_pairs(vr,ce_cutoff)
 
   if (length(pairs)==0){
     return(vr)
@@ -259,7 +281,15 @@ roberts_group_ce <- function(vr,ce_cutoff,remove = "first"){
   return(vr)
 }
 
+
 roberts_filter_dbSNP <- function(vr,dbSNP){
+
+  sqlS = seqlevelsStyle(vr)
+
+  if (sqlS == "UCSC"){
+    seqlevelsStyle(vr) = "NCBI"
+  }
+
   snips = BSgenome::snpsByOverlaps(dbSNP,vr)
   ovrlaps = GenomicRanges::findOverlaps(query = snips,subject = vr)
   hitsindbSNP = S4Vectors::subjectHits(ovrlaps)
@@ -277,6 +307,10 @@ roberts_filter_dbSNP <- function(vr,dbSNP){
 
   per = scales::percent(1-(length(vr)/ol))
   warning(glue::glue("{per} mutations removed because present in dbSNP"))
+
+  if (sqlS == "UCSC"){
+    seqlevelsStyle(vr) = "UCSC"
+  }
 
   return(vr)
 }
@@ -309,42 +343,36 @@ roberts_pvalue <- function(x, k, p){
 
 
 # NIKKLIEA ======================================================================
+
+#' Compute cluster based in custom thresholds
+#'
+#' @param vr a VRanges object
+#' @param IMD the inter-mutational distance to select mutations
+#' @param nmuts the number of mutations per cluster requiered
+#' @param event_categories a named vactor with the minimum number of mutations
+#'
+#' @return
+#' @export
+#'
+#' @examples
 custom_basic_clustering <- function(vr,
-                                    IMD,
-                                    nmuts,
-                                    event_categories){
+                                      IMD,
+                                      nmuts,
+                                      event_categories,
+                                      nearest = TRUE){
   # step 0: Unique sample assumption
   stopifnot(length(unique(sampleNames(vr))) == 1)
-
   stopifnot(!is.unsorted(vr)) # ???
 
-  # step 1. find pairs
-  pairs = find_pairs_VR(vr,IMD)
-
-  # step 2. get the n muts in each pair
-  muts = purrr::map2_dbl(S4Vectors::queryHits(pairs),
-                         S4Vectors::subjectHits(pairs),
-                         function(from,to){
-    muts = vr[from:to] # this needs the VR to be sorted
-    return(length(muts))
-  })
-
-  # step 3. filter
-  mask = muts >= nmuts
-  pairs = pairs[mask]
-
-  selected_muts = purrr::map2(S4Vectors::queryHits(pairs),
-                              S4Vectors::subjectHits(pairs),
-                            function(from,to){
-                              return(from:to)
-                            })
-
-  selected_muts = unique(unlist(selected_muts))
+  clust_mask_rle = get_custom_cluster_rle(vr = vr,
+                                          IMD = IMD,
+                                          nmuts = nmuts,
+                                          nearest = nearest)
+  clust_mask_res = as(clust_mask_rle,"vector")
 
   vr$custom_clust = FALSE
-
-  if (!is.null(selected_muts)){
-    vr[selected_muts]$custom_clust = TRUE
+  if (any(clust_mask_res)){
+    vr[clust_mask_res]$custom_clust = TRUE
   }
 
   # call events for basic
@@ -357,6 +385,48 @@ custom_basic_clustering <- function(vr,
   vr$event_muts = events_res$lengths
   vr$rid = events_res$rid
   return(vr)
+
 }
 
+
+get_custom_cluster_rle <- function(vr,nearest,IMD,nmuts) {
+  if (nearest){
+    ovr = distanceToNearest(vr)
+
+    imd_res = rep(NA,length(vr))
+    imd_res[queryHits(ovr)] = mcols(ovr)$distance
+  } else {
+    precede_id = GenomicRanges::precede(x = vr)
+    # this removes last positions in the chromosome
+    rm_mask = !is.na(precede_id)
+    tmp_vr = vr[rm_mask]
+    precede_id = precede_id[rm_mask]
+    precede_vr = vr[precede_id]
+
+    distance(tmp_vr,precede_vr) -> imd
+    imd_res = rep(NA,length(vr))
+    imd_res[precede_id] = imd
+  }
+
+  clust_mask_imd <- imd_res <= IMD
+  clust_mask_rle <- Rle(clust_mask_imd)
+  events_mask = runLength(clust_mask_rle) >= nmuts
+  runValue(clust_mask_rle) = runValue(clust_mask_rle) & events_mask
+
+  return(clust_mask_rle)
+}
+
+
+
+
+
+removeBiallelic <- function(vr) {
+  stopifnot(length(unique(as.character(sampleNames(vr)))) == 1)
+  findOverlaps(vr,vr) -> test
+  same_pos = queryHits(test[queryHits(test) != subjectHits(test)])
+  if (length(same_pos) > 0){
+    vr = vr[-same_pos]
+  }
+  vr
+}
 

@@ -13,6 +13,9 @@ roberts_pvalue(x, k, p)
 
 \item{p}{mutation probability}
 }
+\value{
+
+}
 \description{
 Compute the negative binomial pvalue
 }

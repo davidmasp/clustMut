@@ -247,7 +247,7 @@ print(opt)
 path = opt$data
 file_paths = fs::dir_ls(path,
                         glob = opt$glob,
-                        recursive = opt$recursive)
+                        recurse = opt$recursive)
 
 # check if files are available and exists
 if (length(file_paths) == 0){
@@ -256,7 +256,6 @@ if (length(file_paths) == 0){
 
 
 # DISTANCE ===============================================================
-
 if (!is.null(opt$boosting)){
   boosting_file = readr::read_lines(opt$boosting)
 
