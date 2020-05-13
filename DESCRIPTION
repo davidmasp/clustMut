@@ -1,7 +1,7 @@
 Package: clustMut
 Type: Package
 Title: Detect Clustered Mutation in Somatic Mutations Datasets
-Version: 0.1.0
+Version: 0.0.1
 Author: David Mas-Ponte
 Maintainer: David Mas-Ponte <david.mas@irbbarcelona.org>
 Description: More about what it does (maybe more than one line)
