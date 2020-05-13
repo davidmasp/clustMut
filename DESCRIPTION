@@ -22,7 +22,6 @@ Imports:
     stringr,
     Biostrings,
     glue,
-    genomicHelpersDMP,
     GenomicRanges,
     broom,
     scales,
@@ -33,5 +32,6 @@ Imports:
     cli,
     ids,
     viridis,
-    cowplot
+    cowplot,
+    helperMut
 RoxygenNote: 6.0.1

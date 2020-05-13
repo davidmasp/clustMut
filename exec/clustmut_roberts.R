@@ -152,12 +152,12 @@ stopifnot(requireNamespace("VariantAnnotation",quietly = T))
 if (opt$verbose){
   library(VariantAnnotation)
   library(clustMut)
-  library(genomicHelpersDMP)
+  library(helperMut)
   library(magrittr)
 } else {
   suppressPackageStartupMessages(library(VariantAnnotation))
   suppressPackageStartupMessages(library(clustMut))
-  suppressPackageStartupMessages(library(genomicHelpersDMP))
+  suppressPackageStartupMessages(library(helperMut))
   suppressPackageStartupMessages(library(magrittr))
 }
 

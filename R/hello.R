@@ -183,7 +183,7 @@ VR_preprocessing <- function(file_paths,
     dat = dat[!mask_duplicated]
 
     # remove bases outside the predefined set
-    ref_in = genomicHelpersDMP::dna_codes[[pair_set]]
+    ref_in = helperMut::dna_codes[[pair_set]]
     mask=ref(dat) %in% ref_in
     dat = dat[mask]
 

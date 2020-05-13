@@ -74,7 +74,7 @@ edit_distance_fdr <- function(vr,
     x %>% base::split(mcols(.)$chunk) %>%
       purrr::map_df(function(y){
         #browser()
-        MS = genomicHelpersDMP::get_MS_VR(y, k = k,genome = genome)
+        MS = helperMut::get_MS_VR(y, k = k,genome = genome)
         precomp_adist = compute_edit_distance(MS)
         diag(precomp_adist)=NA # this are the withitself values.
 

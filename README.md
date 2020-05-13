@@ -1,86 +1,96 @@
-clustMut <img src="clustmut_logo.png" align="right" />
-========================================================
 
-The goal of clustMut is to call clustered mutations in sets of somatic mutations.
-A clustered mutation is defined as the result of a local _hyper_-mutation event.
+<!-- README.md is generated from README.Rmd. Please edit that file -->
 
-This package uses XXX different statistics to compute and detect those events.
+# clustMut <a href=''><img src='man/figures/clustmut_logo.png' align="right" height="165" /></a>
 
-* Chromosomic distance - Need a randomized version of the sample that you can generate using [randommut](http://fsupeksvr.irbbarcelona.pcb.ub.es/gitlab/dmas/randommut).
-* Allele Frequency
-* Edit distance between mutations
+<!-- badges: start -->
+
+[![Lifecycle:
+experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://www.tidyverse.org/lifecycle/#experimental)
+<!-- badges: end -->
+
+## Overview
+
+The goal of clustMut is to call clustered mutations in sets of somatic
+mutations. A clustered mutation is defined as the result of a local
+*hyper*-mutation event which generates pairs of mutations that are
+closer than expected.
+
+This **package** uses the output of a chromosomic distance randomization
+from
+[randommut](http://fsupeksvr.irbbarcelona.pcb.ub.es/gitlab/dmas/randommut)
+and a mutation stratification list to account for subclonal frequency.
 
 ## Installation
 
-**Using devtools**
+In order to install the package use:
 
-Install the package using the following command. Note that is needed to install genomicHelpersDMP manually from its repository [here](http://fsupeksvr.irbbarcelona.pcb.ub.es/gitlab/dmas/genomicHelpersDMP)
-
-```bash
-install.packages(c("devtools","getPass"))
-devtools::install_git(
-  "http://fsupeksvr.irbbarcelona.pcb.ub.es/gitlab/dmas/clustMut.git", 
-  credentials = git2r::cred_user_pass("dmas", getPass::getPass()),
-  branch = "dev"
-)
+``` r
+remotes::install_github("davidmasp/clustMut@develop")
 ```
 
-Then, move the script to run to your `bin` or to a folder available in your `$PATH`.
-This is a one time only action, when you update your package the new version will be available from the same script.
+You need to first install the
+[remotes](https://cran.r-project.org/web/packages/remotes/index.html)
+package.
 
-**Cloning the repository**
-
-First, clone the repository and builod the package
-
-```bash
-git clone gitlab@fsupeksvr.irbbarcelona.pcb.ub.es:dmas/clustMut.git
-cd clustMt
-R CMD INSTALL --no-multiarch --with-keep.source .
-```
-
-Then link the clustMut executable (bash script) to a folder in your path.
-
-```bash
-ln -s clustmut ~/bin/
-```
+You can download the bash launcher script from [this repo]() and move it
+to a folder in your `$PATH`. If you update the R package, there’s no
+need to update this launcher.
 
 ### Dependencies
 
-R packages should be installed when instaling the package. No other packages are needed for the package. Bash and UNIX is required to run the shell script. 
+  - Currently the package depends on genomicHelpersDMP which is beign
+    transitioned to [helperMut](https://github.com/davidmasp/helperMut).
+  - The rest of R packages should be installed when instaling the
+    package.
+  - Bash and UNIX is required to run the shell launcher script.
 
 ## Usage
 
-You can use clustmut to obtain kataegis events, clusters based on VAF or clustered mutations based on the Edit distance.
-Run it with the appropiate mode command.
+A nextflow wrapper pipeline is available at
+[hyperClust](https://github.com/davidmasp/hyperclust) which will contain
+all the steps needed to perform the cluster calling steps.
+
+You can use clustmut to obtain mutation clusters based on different
+methods.
 
 ### distance
 
-```bash
-clustmut distance -i /home/dmas/data/TCGA_MUTS/RNDmut/ \
+``` bash
+clustmut distance -i /path/to/muts/ \
                 --glob "*randomized.tsv" \
                 --recursive \
                 -o test_omichili \
-                -N 1 \
                 -Vlwtvu
 ```
 
 ### Boosting
 
-A file with the following information has to be provied as the `{rndmut_file_name}_stratification`. This file needs to be a list of this level.
+In order to incorporate extra layers of information such as the clonal
+fraction of the mutations or the strand pair a boosting list has to be
+provided.
 
-```
+The file should be a unique column list with the following information
+`{rndmut_file_name}_stratification`.
+
+``` txt
 chr:pos:sample:ref:alt_{group}
 ```
 
-where group is a set of mutations that will be grouped together.
+Where group is a set of mutations that will be grouped together in the
+analysis.
 
-NOTE: Samples will allways be included in the group as default.
-
+NOTE: Samples should allways be included in the group as default.
 
 ## Troubleshooting
 
-
 | Error code | Situation                                                                                                                                                | Solution                           |
-|------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------|
-| 123        | When the sample (or multiple samples) doesn't have any valid mutation. This means all mutations mutations have been excluded because of the filters used | Remove that sample or the filters. |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
+| 123        | When the sample (or multiple samples) doesn’t have any valid mutation. This means all mutations mutations have been excluded because of the filters used | Remove that sample or the filters. |
 |            |                                                                                                                                                          |                                    |
+
+## Contribute
+
+If you want to contribute to the package, please fork the repo and
+submit a PR. Currently the package is under development so no features
+are explicitily requested.

@@ -84,7 +84,7 @@ roberts_clusters_pairs <- function(vr,
   # step 4: get nearest pair
   nearest_pair = GenomicRanges::distanceToNearest(vr)
   dist = mcols(nearest_pair)$distance
-  test_binom = genomicHelpersDMP::binom_test(x = rep(2,length(nearest_pair)),
+  test_binom = helperMut::binom_test(x = rep(2,length(nearest_pair)),
                                              n = dist,
                                              p = rep(pi,length(nearest_pair)))
 
@@ -263,7 +263,7 @@ roberts_filter_dbSNP <- function(vr,dbSNP){
   snips = BSgenome::snpsByOverlaps(dbSNP,vr)
   ovrlaps = GenomicRanges::findOverlaps(query = snips,subject = vr)
   hitsindbSNP = S4Vectors::subjectHits(ovrlaps)
-  alleles = genomicHelpersDMP::dna_codes[as.character(snips$alleles_as_ambig)]
+  alleles = helperMut::dna_codes[as.character(snips$alleles_as_ambig)]
 
   mask_alleles = unlist(purrr::map2(alleles,
                              hitsindbSNP,

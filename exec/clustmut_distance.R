@@ -163,7 +163,7 @@ if (opt$verbose) {
 
 
 # check dependencies ===========================================================
-deps = c("genomicHelpersDMP",
+deps = c("helperMut",
          "magrittr",
          "readr",
          "purrr",
@@ -186,7 +186,7 @@ clustMut::clustmut_internal_return_version(
 libs = c(
   "VariantAnnotation",
   "clustMut",
-  "genomicHelpersDMP",
+  "helperMut",
   "magrittr",
   "parallel"
 )
@@ -303,7 +303,7 @@ vr_res = lapply(file_paths,function(x){
   dat %<>% dplyr::distinct(chr,start,sample,alt,.keep_all=TRUE)
 
   # remove NNN and outside set
-  ref_in = genomicHelpersDMP::dna_codes[[opt$pair_set]]
+  ref_in = helperMut::dna_codes[[opt$pair_set]]
   mask=dat$ref %in% ref_in
 
   dat = dat[mask,]
